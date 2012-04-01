@@ -1,0 +1,10 @@
+cron:
+- description: daily notifications
+  url: /admin/notifyall
+  schedule: every day 06:00
+  timezone: America/Toronto
+
+- description: card checks
+  url: /admin/checkallcards
+  schedule: every 2 hours from 05:00 to 21:00
+  timezone: America/Toronto

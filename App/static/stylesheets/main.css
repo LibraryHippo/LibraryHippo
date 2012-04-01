@@ -1,0 +1,178 @@
+/* http://css.maxdesign.com.au/floatutorial/tutorial0816.htm */
+
+body
+{
+  padding: 0;
+  margin: 0;
+}
+
+#header h1
+{
+  font-size: 30px;
+  height: 40px;
+  padding-top: 20px;
+  padding-bottom: 10px;
+  margin-top: 0px;
+  color: white;
+  background-color: #491112;
+}
+
+#header
+{
+  padding: 0;
+  height: 115px;
+}
+
+#content
+{
+  padding: 1em;
+}
+
+#menu 
+{
+  position: absolute;
+  top: 60px;
+  left: 150px;
+  margin: 0px;
+  padding: 0px;
+}
+
+#menu ul li
+{
+  display: inline;
+}
+
+#menu ul li a
+{
+  color: #491112;
+  padding-right: 0.5em;
+  padding-left: 0.5em;
+  padding-top: 4px;
+  padding-bottom: 2px;
+  font-weight: bold;
+  text-decoration: none
+}
+
+#menu ul li a:hover
+{
+  background-color: #491112;
+  color: white;
+}
+
+
+/*
+To style the footer, we first need to set it to "clear: both". This
+is critical, as it will force the footer below any floated elements
+above. We then add "padding:.5em" and "margin: 0" .
+*/
+#footer
+{
+  clear: both;
+  margin: 0;
+  padding: .5em;
+  /* border-top: 1px solid gray; */
+} 
+
+ 
+/* Browsers use different amounts of margin above paragraphs and
+headings. It is safe to remove all top margins, as long as there are
+bottom margins to keep the paragraphs and headings separate from
+elements below them. */
+#content h2
+{ 
+  margin-bottom: 0.5em;
+  padding-bottom: .3em;
+  border-bottom: 1px solid;
+  border-color: #CCCCCC;
+  color: #491112; 
+}
+
+#content h3
+{
+  color: #491112; 
+}
+
+.about-item
+{
+    margin-top: 1em;
+}
+
+.about-item .question
+{
+  font-weight: bold;
+}
+
+.question
+{
+        margin-bottom: 0em;
+        padding-bottom: 0em;
+}
+
+.answer
+{
+        margin-top: 0em; 
+        margin-left: 0.5em;
+/*        padding-top: 0em; */
+}
+
+.answer p
+{
+    margin-top: 0em;
+    margin-bottom: 0.5em;
+}
+
+/* If you want to set a maximum width on your main content, you
+can. Although IE browsers will ignore this rule, other standards
+compliant browsers will not allow the content area to go wider that
+36em - keeping the line length to a comfortable width. */
+/* #content { max-width: 36em; } */
+
+/* ------------------------------------------------------------------------ */
+
+table {
+  padding: 0px;
+  margin: 0px;
+  border-collapse: collapse;
+}
+
+#content a:link, #content a:visited {
+   font-weight: normal;
+   text-decoration: none;
+   color: #801E20;
+   border: 1px solid white;
+}
+
+#content a:hover {
+        background-color: #EEEEEE;
+        border: 1px solid #BBBBBB;
+}
+
+thead {
+  text-align: left;
+}
+
+td, th {
+  padding: 1px 1em;
+}
+
+/* tr+tr means a tr only if it has a tr before it! This is called an adjacent sibling selector,
+    as talked about at http://www.elated.com/articles/styling-tables-with-css/.
+    We skip the first row in case there's no header.  */
+.grid tbody tr+tr {
+    border-top: 1px solid;
+    border-color: #CCCCCC;
+}
+
+.grid thead {
+    border-bottom: 1px solid;
+    border-color: #CCCCCC;
+}
+
+td.sortkey {
+    display: none;
+}
+
+/* shown when form validation fails */
+label.error { float: none; color: red; padding-left: .5em; vertical-align: middle; }
+
+

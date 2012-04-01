@@ -1,0 +1,38 @@
+{%extends "base.html" %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+      $(document).ready(function(){
+          $("form").each(
+            function(){
+              $(this).validate(); 
+            });
+      });       
+    </script>
+{% endblock scripts %}
+
+{% block header %}LibraryHippo - Families{% endblock %}
+{% block content %}
+
+<table id="families" class="grid">
+<thead>
+  <tr>
+    <th colspan="4">Family Name</th>
+    <th>Impersonate?</th>
+  </tr>
+</thead>
+<tbody>
+{% for family in families %}
+  <tr>
+    <td>{{ family.name }}</td>
+    <td><a href="/admin/notify/{{ family.key() }}">notify</a></td>
+    <td><a href="/admin/notifytest/{{ family.key() }}">send test email</a></td>
+    <td><a href="/admin/checkedcards/{{ family.key() }}">view checked cards</a></td>
+    <td>{% for principal in family.principals %}<a href="/admin/impersonate/{{ principal.email() }}">{{ principal }}</a>{% endfor %}</td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+
+{% endblock %}

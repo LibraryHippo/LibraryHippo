@@ -1,0 +1,201 @@
+{%extends "base.html" %}
+
+{% block title %}LibraryHippo Account Summary{% endblock title %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="http://ajax.microsoft.com/ajax/jQuery/jquery-1.4.2.min.js"/></script>
+    <script src="http://ajax.microsoft.com/ajax/jQuery.Validate/1.6/jQuery.Validate.min.js"/></script>
+    <script>
+      $(document).ready(function(){
+         $("form").each(
+           function(){
+             $(this).validate(); 
+           });
+      });       
+    </script>
+    <script type="text/javascript">
+      function remove_card(patron_name, library_name, number, key)
+      {
+          var card_key = $($('td', '#edit_card')[0]).html();
+          window.location = '/removecard/' + card_key;
+      }
+
+      function change_pin()
+      {
+          var card_key = $($('td', '#edit_card')[0]).html();
+          window.location = '/changepin/' + card_key + '/' + $('#new_pin')[0].value;
+      }
+
+      function can_change_pin()
+      {
+          $('#change_pin')[0].disabled = !$('#new_pin')[0].value;
+      }
+
+
+      function edit_card(row)
+      {
+          $('#cardlist button').each( function(index, element) { element.disabled = true; } );
+
+
+          $source_row = $(row);
+          $edit_row = $source_row.clone();
+          $edit_row.attr('id', 'edit_card');
+          $('td:last', $edit_row).remove();
+
+          $pin_field = $('td:last', $edit_row);
+          $pin_field.html('<input id="new_pin" type="password" name="pin"/>');
+          $pin_field.keyup(can_change_pin);
+          $pin_field.mouseout(can_change_pin);
+          $pin_field.blur(can_change_pin);
+
+          $cancel_button = $('<button>cancel</button>');
+          $cancel_button.click(cancel_card_edit);
+          $edit_row.append($cancel_button);
+
+          $remove_button = $('<button>remove</button>');
+          $remove_button.click(remove_card);
+          $edit_row.append($remove_button);
+
+          $change_pin_button = $('<button id="change_pin" disabled="true">change pin</button>');
+          $change_pin_button.click(change_pin);
+          $edit_row.append($change_pin_button);
+
+          $('#pin_header').show();
+
+          $source_row.after($edit_row);
+          $source_row.hide();
+      }
+
+      function cancel_card_edit()
+      {
+          $('#pin_header').hide();
+          $('#edit_card').prev().show();
+          $('#edit_card').remove();
+          $('#cardlist button').each( function(index, element) { element.disabled = false; } );
+      }
+
+  </script>
+{% endblock scripts %}
+
+{% block header %}{{ family.name }} Account Summary{% endblock %}
+{% block content %}
+{% if family %}
+<h2>Registered Cards</h2>
+{% if cards %}
+<table id="cardlist" class="grid">
+<thead>
+  <tr>
+    <th>Patron Name</th>
+    <th>Library</th>
+    <th>Card Number</th>
+    <th id="pin_header" style="display:none">PIN</th>
+  </tr>
+</thead>
+<tbody>
+{% for card in cards %}
+  <tr>
+    <td style="display:none">{{ card.key() }}</td>
+    <td>{{ card.name }}</td>
+    <td>{{ card.library.name }}</td>
+    <td>{{ card.number }}</td>
+    <td><!-- pin - usually not displayed --></td>
+    <td><button onclick="edit_card(this.parentNode.parentNode)">edit</button></td>
+
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+
+{% else %}
+You haven't added any cards yet.
+{% endif %}
+
+<div id="addcard">
+<h3>Add a new card</h3>
+<form action="/savecard" method="post">
+  <table>
+    <tr>
+      <td><label for="name">Patron Name:</label></td>
+      <td><input type="text" size="60" name="name" class="required"/></td>
+    </tr>
+    <tr>
+      <td><label for="library_id">Library:</label></td>
+      <td><select name="library_id" class="required">
+              <option value="">-- Pick a library --</option>
+              {% for library in libraries %}
+                <option value="{{ library.key() }}">{{ library.name }}</option>
+              {% endfor %}
+      </td>
+    </tr>
+    <tr>
+      <td><label for="number">Card Number:</label></td>
+      <td><input    type="text" size="60" name="number" class="required"/></td>
+    </tr>
+    <tr>
+      <td><label for="pin">PIN:</label></td>
+      <td><input type="password" name="pin" class="required"/></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td><input type="submit" value="add a new card"/></td>
+    </tr>
+  </table>
+</form>
+</div>
+{% endif %}
+
+{% if family.principals %}
+<div id="responsible">
+<h2>Responsible People</h2>
+<form action="/removeresponsible" method="post">
+<table id="responsiblelist" class="grid">
+<thead>
+  <tr>
+    <th>e-mail</th>
+  </tr>
+</thead>
+<tbody>
+{% for principal in family.principals %}
+  <tr>
+    <td>{{ principal.email() }}</td>
+    <td><input type="checkbox" name="{{ principal.email() }}"/></td>
+  </tr>
+ {% endfor %}
+  <tr><td>&nbsp;</td><td><input type="submit" value="remove"/></td></tr>
+  </tbody>
+  </table>
+  </form>
+<form action="/addresponsible" method="post">
+  <h3>Add a new responsible person (like a spouse)</h3>  
+  <table>
+    <tr>
+      <td>Google e-mail:</td>
+      <td><input type="text" size="60" name="email" class="required"/></td>
+    </tr>
+    <tr>
+      <td/>
+      <td><input type="submit" value="Add"/></td>
+    </tr>
+  </table>
+</form>
+</div> <!-- responsible -->
+{% endif %}
+
+<div id="editfamily">
+<h2>{%if family %}Change your family name{% else %}Enter your family
+name (e.g. Granger, Weasley){% endif %}</h2>
+<form action="/savefamily" method="post">
+  <table>
+    <tr>
+      <td>Family Name:</td>
+      <td><input type="text" size="60" name="name" class="required" {% if family %}value="{{ family.name }}"{% endif %}/></td>
+    </tr>
+    <tr>
+      <td/>
+      <td><input type="submit" value="save name"/></td>
+    </tr>
+  </table>
+</form>
+</div>
+{% endblock %}
