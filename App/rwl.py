@@ -26,12 +26,13 @@ class LibraryAccount:
         utils.soup.remove_comments(element)
         date = ''.join(utils.soup.text(element)).strip()
         logging.debug('date string is: %s', date)
-        match = re.match('\d\d?/\d\d?/\d\d\d\d', date)
+        match = re.match('\d\d? \w{3} \d\d\d\d', date)
         if match:
             date = match.group()
-            return datetime.datetime.strptime(date, '%d/%m/%Y').date()
+            return datetime.datetime.strptime(date, '%d %b %Y').date()
 
         # just return the original string, as we don't know what else to do
+        logging.error('using date string in unknown format: %s', date)
         return date
 
     def get_title_from_hold_row(self, hold_row):

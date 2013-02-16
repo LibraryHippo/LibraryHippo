@@ -32,7 +32,7 @@ def test__parse_hold__vanilla_hold__understands_hold():
        <td class="accountstyle pickup">St. Jacobs Branch Library</td>
 
       <td class="accountstyle expiration_date">
-         30/11/2009
+         30 Nov 2009
       </td>
 
       <td class="accountstyle status">
@@ -67,7 +67,7 @@ def test__parse_hold__expires_does_not_have_leading_zeros__date_parsed():
        <td class="accountstyle pickup">St. Jacobs Branch Library</td>
 
       <td class="accountstyle expiration_date">
-         8/9/2010
+         8 Sep 2010
       </td>
 
       <td class="accountstyle status">
@@ -131,7 +131,7 @@ def test__parse_item__vanilla_item__understands_item():
         </td>
 <td class="defaultstyle" align="left">
 <!-- Due Date -->
-<strong>17/12/2009,23:59</strong>
+<strong>17 Dec 2009,23:59</strong>
 </td>
 <td class="defaultstyle" align="left">
 <!-- Est Fines -->
@@ -156,7 +156,7 @@ def test__parse_item__date_does_not_have_leading_zeros__date_parsed():
         </td>
 <td class="defaultstyle" align="left">
 <!-- Due Date -->
-<strong>6/1/2010,23:59</strong>
+<strong>6 Jan 2010,23:59</strong>
 </td>
 <td class="defaultstyle" align="left">
 <!-- Est Fines -->
