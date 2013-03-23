@@ -38,7 +38,7 @@ def test__load_summary__long_ago_checks__late_warning():
     template_values = an.load_summary(family, [cc])
 
     assert template_values['info']
-    assert 'unable to check card for 22 hours' in template_values['info'][0].message
+    assert 'Unable to check card for 22 hours.' in template_values['info'][0].message
 
 def test__load_summary__long_ago_checks__turns_on_should_notify():
     an = libraryhippo.AdminNotify(None, None)

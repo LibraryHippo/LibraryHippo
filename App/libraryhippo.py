@@ -423,7 +423,7 @@ class AdminNotify(MyHandler):
                 time_since_check = utils.filters.elapsed(elapsed)
                 logging.error('unable to check card for ' + time_since_check)
                 template['should_notify'] = True
-                template['info'].append(data.CardInfo(c.payload.library_name, c.payload.patron_name, 'unable to check card for ' + time_since_check + ' <a href="http://libraryhippo.com/about#check_failed">Why?</a>'))
+                template['info'].append(data.CardInfo(c.payload.library_name, c.payload.patron_name, 'Unable to check card for ' + time_since_check + '. <a href="http://libraryhippo.com/about#check_failed">Why?</a>'))
                     
         return template
 

@@ -84,15 +84,13 @@ class LibraryAccount:
         form_fields.update({
           'name': self.card.name,
           'code': self.card.number,
-          'pin': self.card.pin,
           })
 
         response = self.fetcher(self.login_url(), form_fields)
         
         response_data = response.content
 
-        newpin_location = response_data.find('/newpin')
-        if newpin_location < 0:
+        if '"patNameAddress"' not in response_data:
              l = LoginError(patron=self.card.name, library=self.card.library.name)
              logging.error('login failed: %s', l)
              raise l            

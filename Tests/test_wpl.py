@@ -304,60 +304,176 @@ def test__parse_status__status_notes_jammed_up_against_date__status_notes_found(
     assert ['IN LIBRARY USE'] == item.status_notes
 
 
-failing_login_response =  '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"><html lang="en">
+failing_login_response =  '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Kitchener and Waterloo Public Libraries                                    /WPL</title>
-<base target="_self"/>
 <link rel="stylesheet" type="text/css" href="/scripts/ProStyles.css" />
-<link rel="stylesheet" type="text/css" href="/screens/w-stylesheet-3a.css" />
-<link rel="shortcut icon" type="ximage/icon" href="/screens/favicon.ico" />
-<script language="JavaScript" type="text/javascript" src="/scripts/common.js"></script>
-
-<link rel="icon" href="/screens/favicon.ico"><link rel="shortcut icon" href="/screens/favicon.ico"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<link rel="stylesheet" type="text/css" href="/screens/k-stylesheet1.css" />
+    <title>Login | Kitchener Public Library</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=8;FF=3;OtherUA=4"><meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+    <meta name="viewport" content="width = device-width, user-scalable = no">
+    <script type="text/javascript" src="/scripts/common.js"></script>
+    <!--<link rel="stylesheet" type="text/css" href="/apps/CAS/resources/login_mobile.css">
+    <link rel="stylesheet" type="text/css" href="/apps/CAS/resources/login_s1_html.css" media="screen and (min-device-width: 481px)"> -->
+    
+    <link rel="stylesheet" type="text/css" href="/apps/CAS/resources/login_mobile.css"  />
+	<style type="text/css" media="screen and (min-width: 481px)">
+    <!--
+    @import url("/apps/CAS/resources/login_s1_html.css");
+    -->
+    </style>
+    <!--[if IE]><link rel="stylesheet" type="text/css" href="/apps/CAS/resources/login_s1_html.css"  media="screen" /><![endif]-->
+    <link href="/apps/CAS/resources/login_mobile.css" rel="stylesheet" type="text/css" media="handheld, only screen and (max-device-width: 480px)" />
+    
 </head>
-<body onLoad='if (document.forms.length > 0) { for (var i=0; i<document.forms[0].elements.length; i++) { if (document.forms[0].elements[i].type == "text") { document.forms[0].elements[i].focus(); document.forms[0].elements[i].select(); return; } } }'>
-<h1>WPL Login</h1>
+ 
+<body id="cas">
+<!--[if IE]>
+<div id="ie">
+<![endif]-->
+<div class="loginPage">
 
-<div class="patform">
-<form method="POST">
-
-<div class="notice">
-
-Sorry, the information you submitted was invalid. Please try again.</div>
-
-<p>To login, please enter the following information and click "Login". Use Tab to move between fields.
-
-<table>
-
-
-<tr>
-<th>First and Last Name</th>
-<td><input name="name" size="40" maxlength="40"></td>
-</tr>
-
-
-
-<tr>
-<th>Library card number (no spaces)</th>
-
-<td><input name="code" size="40" maxlength="40"></td>
-</tr>
-
-
-<tr>
-<th>Personal Identification Number</th>
-<td><input name="pin" type="password" size="40" maxlength="40"></td>
-</tr>
-
-
-</table>
-
-<div class="submit-button">
-<input name="submit" type="submit" value="Login">
+<div class="loginTop"> 
+&nbsp;<!-- Prevent div collapse -->
+<div class="loginTopLogo">
+<a href="http://books.kpl.org/search~S1/" tabindex="0"><img src="http://books.kpl.org/screens/k-logo-150x64.gif" alt=""></a>
+</div>
 </div>
 
-</form>
+<!-- Use for library-only authentication: -->
+<div class="loginArea loginArea1Col"> 
+<div class="clearfloats"></div>
+
+ 	<!--end theForm1-->
+ 	<form id="fm1" class="fm-v clearfix" method="post" action="/iii/cas/login?service=https%3A%2F%2Fbooks.kpl.org%3A443%2Fpatroninfo~S1%2FIIITICKET&amp;scope=1">
+	<!--display any errors-->
+	<div id="status" class="errors">Sorry, the information you submitted was invalid. Please try again.</div>
+	<!-- Message from client webapp to be displayed on the CAS login screen -->
+  	<div id="clientmessage">
+	<!--display any errors-->
+	
+  	</div> <!-- end clientmessage -->
+  	<!--start theForm2-->
+	
+	<!-- Message from client webapp to be displayed on the CAS login screen -->
+  	<div id="clientmessage">
+	<!--display any errors-->
+  	</div> <!-- end clientmessage -->
+	   
+	<!--display login form-->
+	<div id="login">
+	  <fieldset>
+<br />
+	    <legend>Login to My Account</legend>
+<br />
+	        <label for="name">First and Last Name:</label>
+            <div class="loginFieldBg">
+              <input id="name" name="name" type="text" value="" size="25" maxlength="50" tabindex="15">
+	        </div>
+	      
+            <fieldset class="barcodeAltChoice">
+            <!--<legend>Enter your barcode or login name</legend>-->
+                    
+              <label for="code">Library card number<br />(no spaces):</label>
+              <div class="loginFieldBg">
+        	      <input id="code" name="code" type="text" value="" size="25" maxlength="50" tabindex="20">
+		      </div>
+            
+            
+            </fieldset>
+<!--           
+			<div id="ipssopinentry">
+            <label for="pin">Personal Identification Number (PIN):</label>
+            <div class="loginFieldBg">
+              <input id="pin" name="pin" type="password" value="" size="25" maxlength="50" tabindex="30">
+	        </div>
+			</div>
+ -->           
+
+	<!--end theForm2-->
+  	
+  		
+		
+		
+    
+	<!--start theForm3-->
+  	
+            
+
+<br />
+        <!-- This button is hidden unless using mobile devices. Even if hidden it enables Enter key to submit. -->
+        <input type="submit" name="Log In" class="loginSubmit" tabindex="35">
+	  </fieldset>
+	</div>  <!-- end login -->
+    <div class="clearfloats"></div>
+    <div class="formButtons">
+    	<a href="#" onclick="document.forms['fm1'].submit();" tabindex="40"><div onmousedown="this.className='pressedState';" onmouseout="this.className='';" onmouseup="this.className='';"><div class="buttonSpriteDiv"><span class="buttonSpriteSpan1"><span class="buttonSpriteSpan2">Submit</span></span></div></div></a>
+  	</div>
+<br />
+
+  	<!--end theForm3-->
+	<!-- Spring Web Flow requirements must be in a certain place -->
+	<input type="hidden" name="lt" value="_c6376BEA4-F99C-9E91-0357-36F3FFDD5524_k2481AD81-47AF-1042-7778-B55FD9268AF4" />
+	<input type="hidden" name="_eventId" value="submit" />
+	</form>
+	<!--start theForm4-->
+	
+
+<!--Enable form focus-->
+<script type="text/javascript"><!--//--><![CDATA[//><!--
+//Hide the main PIN entry if the new pin section is active.
+try { if ( document.getElementById("ipssonewpin") ) {
+	document.getElementById("ipssopinentry").style.display="none"; } }
+catch(err) {}
+
+//Look for the first field in the external patron part of the form. This field will get cursor focus.
+var ipssoFirstField;
+try { ipssoFirstField = document.forms[0].extpatid; }
+catch(err) {
+}
+//If we still don't have a field, look for the name field in the library account part.
+if ( ipssoFirstField==undefined ) { ipssoFirstField = document.forms[0].name; }
+//Set focus. Ignore errors.
+try { ipssoFirstField.focus(); }
+catch(err) {}
+
+document.onkeydown = enterSubmit
+
+function enterSubmit(e) {
+var keycode;
+if (window.event) keycode = window.event.keyCode;
+else if (e) keycode = e.which;
+if (keycode==13)
+ document.forms[0].submit();
+}
+
+//--><!]]></script>
+
+
+</div> <!-- end loginArea -->
+
+<div class="loginActions">
+<!--
+<span class="loginActionText">New to the library?</span>
+<span class="loginActionScreenOnly"><a href="/selfreg">Create an account</a></span>
+<span class="loginActionSeparator"></span>
+-->
+<!--
+<span class="loginActionScreenOnly"><a href="https://books.kpl.org/pinreset~S1" tabindex="45">Forget Your PIN?</a></span>
+-->
 </div>
+</div> <!-- loginPage -->
+
+<!--[if IE]>
+</div>
+<![endif]-->
+<!-- IPSSO html form updated 2010 June 29 -->
+</body>
+</html>
+
+<!--this is customized </iiidb/http/apps//CAS/resources/ipsso_s1.html>-->
+
+	<!--end theForm4-->
 '''
 
 def test__login__login_fails__throws():
@@ -370,19 +486,199 @@ def test__login__login_fails__throws():
 
 def test__login__new_kpl_format__passes():
     w = wpl.LibraryAccount(MyCard(), MyOpener('', '''
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
-<head> 
-<title>Kitchener and Waterloo Public Libraries                                    /WPL</title> 
-<base target="_self"/> 
-<link rel="stylesheet" type="text/css" href="/scripts/ProStyles.css" /> 
-<link rel="stylesheet" type="text/css" href="/screens/w-stylesheet.css" /> 
-<link rel="shortcut icon" type="ximage/icon" href="/screens/favicon.ico" /> 
-<script language="JavaScript" type="text/javascript" src="/scripts/common.js"></script> 
-<script language="JavaScript" type="text/javascript" src="/scripts/elcontent.js"></script> 
- 
-<link rel="icon" href="/screens/favicon.ico"><link rel="shortcut icon" href="/screens/favicon.ico"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"> 
-</head> 
-<body > 
+<!-- Rel 2007 "Skyline" Example Set -->
+<!-- This File Last Changed: 02 September 2008 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> <html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Kitchener and Waterloo Public Libraries                                    /KPL</title>
+<base target="_self"/>
+<link rel="stylesheet" type="text/css" href="/scripts/ProStyles.css" />
+<link rel="stylesheet" type="text/css" href="/screens/k-stylesheet1.css" />
+<link rel="shortcut icon" type="ximage/icon" href="/screens/favicon.ico" />
+<script type="text/javascript" src="/scripts/common.js"></script>
+<script type="text/javascript" src="/scripts/features.js"></script>
+<script type="text/javascript" src="/scripts/elcontent.js"></script>
+
+<link rel="icon" href="/screens/favicon.ico"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+</head>
+<body >
+<body>
+
+<div id="wrapper">
+
+<div id="header">
+<a href="http://www.kpl.org/"><img src="/screens/kpl_logo.png" alt="Kitchener Public Library logo" width="250" height="95" border="0" /></a>
+
+<div id="nav">
+<ul id="navmenu">
+<li><a href="http://books.kpl.org/search~S1/" title="Library Catalogue" class="selected">Catalogue</a></li>
+</ul>
+</div>
+
+<div id="nav2">&nbsp;</div>
+
+</div>
+
+<font color="purple">You are logged in to Kitchener and Waterloo Public Libraries                                    /KPL as: </font><font color="purple" size="+2">Hippo, Librarian</font><br />
+<br />
+
+
+<script type="text/javascript">
+	function SetHTML1(type) {
+		document.getElementById("a1").style.display = "none"
+		document.getElementById("b1").style.display = "none"
+		// Using style.display="block" instead of style.display="" leaves a carriage return
+		document.getElementById(type).style.display = ""
+	}
+</script>
+
+<div align="center">
+
+<span id="a1" style="">
+<form method="get" action="http://encore.kpl.org/iii/encore_kpl/Home,$Search.form.sdirect" name="form" id="form">	
+<input name="formids" value="target" type="hidden">
+<input name="lang" value="eng" type="hidden">
+<input name="suite" value="def" type="hidden">
+<input name="reservedids" value="lang,suite" type="hidden">
+<input name="submitmode" value="" type="hidden">
+<input name="submitname" value="" type="hidden">
+<table>
+<tr>
+<td style="padding-right:10px;"><span style="font-family:'Times New Roman', Times, serif; font-size:1.4em;">Search:</span></td>
+<td><input name="target" value="" id="target" type="text" style="border:1px solid #555; width:410px; height:30px; font-size:100%;"></td>
+<td style="padding-left:10px;"><input type="image" src="http://www.kpl.org/_images/catalogue/go_button.png" value="submit"/></td>
+</tr>
+<tr><td colspan="3" style="font-size:12px;">&nbsp;</td></tr>
+</table>
+</form>
+</span>
+
+<span id="b1" style="display:none;">
+<div  class="bibSearchtool" style="margin-top:5px;"><form target="_self" action="/search~S2/">
+      <label for="searchtype" style="display:none;">Search Type1</label><select name="searchtype" id="searchtype">
+        <option value="t"> TITLE</option>
+        <option value="a"> AUTHOR</option>
+        <option value="s"> SERIES</option>
+        <option value="d"> SUBJECT</option>
+        <option value="c"> CALL NO</option>
+        <option value="i"> ISBN/ISSN</option>
+        <option value="Y" selected="selected"> KEYWORD</option>
+      </select>
+      &nbsp;
+      <label for="searcharg" style="display:none;">Search</label><input type="text" name="searcharg" id="searcharg" size="30" maxlength="75" value="" />
+      &nbsp;
+      <label for="searchscope" style="display:none;">Search Scope</label><select name="searchscope" id="searchscope">
+        <option value="2" selected>Kitchener Public Library</option>
+        <option value="3">Waterloo Public Library</option>
+        <option value="5">King Digital Collection</option>
+      </select>
+      &nbsp;
+      <input type="hidden" name="SORT" value="D" /><input type="hidden" name="extended" value="0" /><input type="submit" name="SUBMIT" value="Search" />
+<div style="margin-top:6px;">
+      <input type="checkbox" name="availlim" value="1"  /> <span class="limit-to-available">Limit results to available items<br/><br/></span>
+</div>
+</form></div>
+</span>
+
+<div align="center" style=" font-family: Arial, Helvetica, sans-serif; font-size:14px;">
+<input style="margin-top:5px;" id="multisearch" name="br" type="radio" onClick="SetHTML1('a1')" checked>Search New KPL Catalogue
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<input style="margin-top:5px;" id="multisearch" name="br" type="radio" onClick="SetHTML1('b1')">Search Classic Catalogue
+</div>
+
+
+<br /><br />
+<p style="font-size:0.85em;"><span style="color:#990000; font-weight:bold;">Note:</span> Please remember to <strong>LOG OUT</strong> of your library account when you are finished using the catalogue.<br />The logout option can be found at the bottom of this page, or in the top right corner of the catalogue.</p>
+
+<br />
+</div>
+
+<!--{patron}-->
+
+<br/><br/>
+
+<div align="center">
+<table>
+<tr>
+<td>
+<div class="patNameAddress">
+<strong>Hippo, Librarian</strong><br />
+100 Regina Street S<br />
+Waterloo ON  N2V 4A8<br />
+519-885-1550 (E)<br />
+EXP DATE:08-01-2013<br />
+<br/>
+<div>
+</div>
+<div>
+<a href="/patroninfo~S1/XXXXXXXX/holds" target="_self">4 requests (holds).</a>
+</div>
+<br><br>
+</div>
+
+</td>
+<td>
+
+<div class="patActionsLinks">
+<div>
+<a href="#" onClick="return open_new_window( '/patroninfo~S1/XXXXXXXX/modpinfo' )">Modify Personal Information</a>
+</div>
+<div><p>
+<a href="/patroninfo~S1/XXXXXXXX/readinghistory" target="_self">My Reading History</a>
+</p></div>
+<br>
+Classic catalogue only:
+<div><p>
+<a href="/patroninfo~S1/XXXXXXXX/getpsearches" target="_self">Preferred Searches</a>
+</p></div>
+<div>
+<a href="/patroninfo~S1/XXXXXXXX/mylists" target="_self">My Lists</a>
+</div>
+<br>
+
+<p><a href="http://encore.kpl.org/iii/encore_kpl/home?component=pageWrapperComponent.patronToolsComponent.patronAccountLoginComponent.patronLogoutLinkComponent&lang=eng&page=HomePage&service=direct&session=T&suite=kpl"><img src="/screens/b-logout.gif" alt="Log Out" border="0" /></a></p>
+
+<!--
+<p valign=top><a href="/logout?" target="_self"><img src="/screens/b-logout.gif" alt="Log Out" border="0" /></a></p>
+-->
+
+</div></td>
+</tr>
+</table>
+</div>
+
+<br/><br/>
+
+<div class="patFuncArea" style="border:1px solid #555555;">
+</div>
+
+<br />
+<div class="footer"></div>
+</div>
+
+</body>
+</html>
+<!--this is customized <screens/patronview_web_s1.html>-->
+'''))
+    w.login()
+
+
+    
+def test__get_status__with_card_expiry_date__reads_date():
+    w = wpl.LibraryAccount(MyCard(), MyOpener('', '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> <html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Kitchener and Waterloo Public Libraries                                    /WPL</title>
+<base target="_self"/>
+<link rel="stylesheet" type="text/css" href="/scripts/ProStyles.css" />
+<link rel="stylesheet" type="text/css" href="/screens/w-stylesheet3.css" />
+<link rel="shortcut icon" type="ximage/icon" href="/screens/favicon.ico" />
+<script type="text/javascript" src="/scripts/common.js"></script>
+<script type="text/javascript" src="/scripts/features.js"></script>
+<script type="text/javascript" src="/scripts/elcontent.js"></script>
+
+<link rel="icon" href="/screens/favicon.ico"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+</head>
+<body >
 <script language="JavaScript" type="text/javascript">
 var min=8;
 var max=22;
@@ -427,7 +723,7 @@ startTimeout(600000, "/search~S3/");
 <div id="header-main1-background">
 <div id="container-header-content">
 <div id="header-logo"><a href="http://www.wpl.ca"><img src="/screens/wpl-logo-main1.jpg" alt="Waterloo Public Library"/></a></div>
-<div id="header-sub"><img src="/screens/wpl-sub-main1.jpg" alt="Waterloo Public Library"/></div>
+<div id="header-nav" align=center><ul><li><a href="http://books.kpl.org/selfreg~S3/">Get a Card</a></li><li><a href="https://books.kpl.org/iii/cas/login?service=http://books.kpl.org/patroninfo~S3/j_acegi_cas_security_check&lang=eng&scope=3" class="navline">My Account</a></li><li><a href="http://www.wpl.ca/location">Hours & Locations</a></li><li><a href="http://www.wpl.ca/contact">Contact Us</a></li></ul></div>
 <div id="header-main1-utility">
 <div id="header-title" class=title1><a href="/search~S3/">Catalogue</a></div>
 <div id="font-size"><a href="javascript:decreaseFontSize();"><img src="/screens/wpl-font-smaller.gif" alt="Font Smaller" width="15" height="38"/></a><a href="javascript:increaseFontSize();" ><img src="/screens/wpl-font-larger.gif" alt="Font Larger" width="19" height="38"/></a></div>
@@ -440,278 +736,155 @@ startTimeout(600000, "/search~S3/");
 
 <div id="container-nav" align=center>
 <div id="nav">
-<ul><li><a href="http://www.wpl.ca" class="navline">Home</a></li><li><a href="http://books.kpl.org/search~S3/">Catalogue</a></li><li><a href="http://www.wpl.ca/location">Locations & Hours</a></li><li><a href="http://books.kpl.org/patroninfo~S3/top">My Account</a></li><li><a href="http://www.wpl.ca/ebooks">eBooks</a></li><li><a href="http://www.wpl.ca/ebranch">eBranch</a></li><li><a href="http://www.wpl.ca/book-a-computer">Book a Computer</a></li><li><a href="http://www.wpl.ca/blogs-more">Blogs</a></li><li><a href="http://www.wpl.ca/contact">Contact Us</a></li></ul>
+<ul><li><a href="http://www.wpl.ca" class="navline">Home</a></li><li><a href="http://books.kpl.org/search~S3">Catalogue</a></li><li><a href="http://www.wpl.ca/ebooks">eBooks</a></li><li><a href="http://www.wpl.ca/ebranch">eBranch</a></li><li><a href="http://www.wpl.ca/book-a-computer">Book a Computer</a></li><li><a href="http://www.wpl.ca/blogs-more">Blogs</a></li><li><a href="http://www.wpl.ca/ebranch/diy/">DIY</a></li></ul>
 </div>
 </div>
 <div align=center>
-<a href="http://wplreads.wordpress.com">WPL Reads</a> |
+<a href="http://wplreads.wpl.ca">WPL Reads</a> |
 <a href="http://books.kpl.org/screens/newitems.html">New Items</a> | <a href="http://www.wpl.ca/about/borrowing/interlibrary-loan-form/">Interlibrary Loan</a>  | <a href="http://www.wpl.ca/ebranch/databases-and-weblinks">Databases and WebLinks</a> | <a href="http://www.wpl.ca/services/ask-us/">Ask Us</a> 
 </div>
-<!--end toplogo.html--> 
-<br /><p align=center><font size=4 color=#0066cc>Kitchener and Waterloo Public Libraries                                    /WPL <br />You are logged in as Conrad, Blair E..</font><p><br /> 
-<br /> 
-<div class="srchhelpHeader" align="center"> 
-<form name="searchtool" action="/search~S3/"> 
-    <select tabindex="1" name="searchtype" id="searchtype" onChange="initSort()"> 
-    <option value="X" selected>Keyword</option> 
-    <option value="t">Title</option> 
-    <option value="a">Author</option> 
-    <option value="s">Series</option> 
-    <option value="d">Subject</option> 
-    <option value="c">Call Number</option> 
-    <option value="i">ISBN/ISSN</option> 
-  </select> 
-  <input tabindex="2" type="text" name="searcharg" size="50"  maxlength="75"> 
-  <input type="hidden" name="searchscope" value="3"> 
-  <input tabindex="3" type="submit" value="Search"> 
-</div> 
- 
-<div class="media"> 
+<!--end toplogo.html-->
+<br /><p align=center><font size=4 color=#0066cc>Kitchener and Waterloo Public Libraries                                    /WPL <br />You are logged in as HIPPO, LIBRARIAN.</font><p><br />
+<br />
+<div class="srchhelpHeader" align="center">
+<form method="get" action="http://encore.kpl.org/iii/encore_wpl/Home,$Search.form.sdirect" name="form" id="form">	
+<input name="formids" value="target" type="hidden">
+<input name="lang" value="eng" type="hidden">
+<input name="suite" value="def" type="hidden">
+<input name="reservedids" value="lang,suite" type="hidden">
+<input name="submitmode" value="" type="hidden">
+<input name="submitname" value="" type="hidden">
+<table>
+<tr>
+<td style="padding-right:10px;"><span style="font-family:'Times New Roman', Times, serif; font-size:1.7em;">Search:</span></td>
+<td><input name="target" value="" id="target" type="text" style="border:1px solid #555; width:410px; height:30px; font-size:1.4em;"></td>
+<td style="padding-left:10px;"><input type="image" src="/screens/go_button.png" value="submit"/></td>
+</tr>
+<tr>
+<td></td>
+<td align="right">
+  <p><a href="http://encore.kpl.org/iii/encore_wpl/home?lang=eng&suite=kpl&advancedSearch=true&searchString=">Advanced Search</a></p></td>
+<td></td></tr>
+</table>
+</form>	
+<br />
+<a name="content" id="content"></a>
+<!--<form name="searchtool" action="/search~S3/">
+    <select tabindex="1" name="searchtype" id="searchtype" onChange="initSort()">
+    <option value="X" selected>Keyword</option>
+    <option value="t">Title</option>
+    <option value="a">Author</option>
+    <option value="s">Series</option>
+    <option value="d">Subject</option>
+    <option value="c">Call Number</option>
+    <option value="i">ISBN/ISSN</option>
+  </select>
+  <input tabindex="2" type="text" name="searcharg" size="50"  maxlength="75">
+  <input type="hidden" name="searchscope" value="3">
+  <input tabindex="3" type="submit" value="Search">
+</div>
+
+<div class="media">
   <div align="center">Media (book, DVD, etc.):
-    <select tabindex="4" name="searchlimits"> 
-      <option value="" selected>Any</option> 
-      <option value="m=d">DVD</option> 
-      <option value="m=j">CD Audio</option> 
-      <option value="m=m">CD-ROM</option> 
-      <option value="m=z">E-audio Book</option> 
-      <option value="m=e">E-book</option> 
-      <option value="m=a">Book</option> 
-      <option value="m=l">Large Print Book</option> 
-      <option value="m=v">Government Document</option> 
-      <option value="m=c">Magazine/Newspaper</option> 
-      <option value="m=o">Kit</option> 
-    </select> 
-  </div> 
-</div> 
-<label class="limit-to-available"> 
-  <div align="center"> 
-    <input tabindex="5" type="checkbox" name="availlim" value="1"> 
+    <select tabindex="4" name="searchlimits">
+      <option value="" selected>Any</option>
+      <option value="m=d">DVD</option>
+      <option value="m=j">CD Audio</option>
+      <option value="m=m">CD-ROM</option>
+      <option value="m=z">E-audio Book</option>
+      <option value="m=e">E-book</option>
+      <option value="m=a">Book</option>
+      <option value="m=l">Large Print Book</option>
+      <option value="m=v">Government Document</option>
+      <option value="m=c">Magazine/Newspaper</option>
+      <option value="m=o">Kit</option>
+    </select>
+  </div>
+</div>
+<label class="limit-to-available">
+  <div align="center">
+    <input tabindex="5" type="checkbox" name="availlim" value="1">
     Limit results to available items
-	</div> 
-</label> 
-</form> 
-<br /> 
-<a name="content" id="content"></a> 
-<!--{patron}--> 
- 
- 
- 
-<table> 
-<tr> 
-<td valign=top> 
-<div class="patNameAddress"> 
-<strong>Conrad, Blair E.</strong><br /> 
-558 Rock Point Cres<br /> 
-Waterloo ON  N2V 2K3<br /> 
-519-725-0257 (E)<br /> 
-EXP DATE:07-01-2012<br /> 
-<br/> 
-<div> 
-</div> 
-<div> 
-<a href="/patroninfo~S3/1408880/holds" target="_self">9 requests (holds).</a> 
-</div> 
-<div> 
-<a href="/patroninfo~S3/1408880/items" target="_self">3 Items currently checked out</a> 
-</div> 
-</div> 
- 
- 
-</td> 
-<td> 
- 
-<div class="patActionsLinks"> 
-<div> 
-<a href="#" onClick="return open_new_window( '/patroninfo~S3/1408880/newpin' )">Modify your PIN</a> 
-</div> 
-<div><p> 
-<a href="/patroninfo~S3/1408880/readinghistory" target="_self">My Reading History</a> 
-</p></div> 
-<div><p> 
-<a href="/patroninfo~S3/1408880/getpsearches" target="_self">Preferred Searches</a> 
-</p></div> 
-</div> 
-</td> 
-</tr> 
-</table> 
-<table> 
-<tr> 
-<td> 
-<div class="patActionsLinks"> 
-<p valign=top><a href="/logout?" target="_self"><img src="/screens/b-logout.gif" alt="Log Out" border="0" /></a></p> 
-</div></td> 
-</tr> 
-</table> 
- 
-<br/><br/> 
- 
-<div class="patFuncArea" style="border:0px #555555;"> 
-</div> 
-<br /> 
+	</div>
+</label>
+</form>
+<br />-->
+<!--{patron}-->
+<table>
+<tr>
+<td valign=top>
+<div class="patNameAddress">
+<strong>HIPPO, LIBRARIAN.</strong><br />
+100 Regina Steet S<br />
+WATERLOO, ON N2V 4A8<br />
+519-885-1550<br />
+EXP DATE:12-04-2009<br />
+<br/>
+<div>
+</div>
+<div>
+<a href="/patroninfo~S3/1307788/holds" target="_self">14 requests (holds).</a>
+</div>
+<div>
+<a href="/patroninfo~S3/1307788/items" target="_self">8 Items currently checked out</a>
+</div>
+</div>
+
+
+</td>
+<td>
+<div style="text-align:left;">
+<div>
+<a href="#" onClick="return open_new_window( '/patroninfo~S3/1307788/modpinfo' )">Modify Personal Information</a>
+</div>
+<div><p>
+<a href="/patroninfo~S3/1307788/readinghistory" target="_self">My Reading History</a>
+</p></div>
+<div><p>
+<p>&nbsp;</p>
+Classic Catalogue Features:
+</p></div>
+<div><p>
+<a href="/patroninfo~S3/1307788/getpsearches" target="_self">Preferred Searches</a>
+</p></div>
+<div style="display:none;">
+<a href="/patroninfo~S3/1307788/patreview" target="_self">My Reviews</a>
+</div>
+<div>
+<a href="/patroninfo~S3/1307788/mylists" target="_self">My Lists</a>
+</div>
+</div>
+</td>
+</tr>
+</table>
+<table>
+<tr>
+<td>
+<div class="patActionsLinks">
+<!--
+<p valign=top><a href="http://encore.kpl.org/iii/encore_wpl/home?component=pageWrapperComponent.patronToolsComponent.patronAccountLoginComponent.patronLogoutLinkComponent&lang=eng&page=HomePage&service=direct&session=T&suite=wpl" target="_self"><img src="/screens/b-logout.gif" alt="Log Out" border="0" /></a></p>-->
+<p valign=top><a href="http://encore.kpl.org/iii/encore_wpl/home?component=pageWrapperComponent.patronToolsComponent.patronAccountLoginComponent.patronLogoutLinkComponent&lang=eng&page=HomePage&service=direct&session=T&suite=wpl" target="_self"><img src="/screens/b-logout.gif" alt="Log Out" border="0" /></a></p>
+</div></td>
+</tr>
+</table>
+
+<br/><br/>
+
+<div class="patFuncArea" style="border:0px #555555;">
+</div>
+
+<br />
 </div>
 <div class="botlogo">
-WPL Catalogue and your library account may not be available
 <br />
-Mon-Thur 10:00-11:30PM and Fri-Sat 6:00-7:30PM for scheduled maintenance.
+Your library account may not be available during scheduled system maintenance 10:00pm - 12:00am Mon to Thu, & 6pm - 8pm Fri to Sun.
 <br />
 </div>
+</body>
+</html>
 
- 
-</body> 
-</html> 
- 
-<!--this is customized <screens/patronview_web_s3.html>-->'''))
-    w.login()
-
-
-    
-def test__get_status__with_card_expiry_date__reads_date():
-    w = wpl.LibraryAccount(MyCard(), MyOpener('', '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"><html lang="en"> 
-<head> 
-<title>Kitchener and Waterloo Public Libraries                                    /WPL</title> 
-<base target="_self"/> 
-<link rel="stylesheet" type="text/css" href="/scripts/ProStyles.css" /> 
-<link rel="stylesheet" type="text/css" href="/screens/w-stylesheet-3a.css" /> 
-<link rel="shortcut icon" type="ximage/icon" href="/screens/favicon.ico" /> 
-<script language="JavaScript" type="text/javascript" src="/scripts/common.js"></script> 
- 
-<link rel="icon" href="/screens/favicon.ico"><link rel="shortcut icon" href="/screens/favicon.ico"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"> 
-</head> 
-<body > 
-<div id="toplogo"> 
- 
-<div id="topbar"> 
- 
-<div class="wpl-logo"> 
-<a href="http://www.wpl.ca/"><img src="/screens/w-banner.gif" alt="Waterloo Public Library" title="Waterloo Public Library"></a> 
-
-</div> 
- 
-<div class="text-on-ca"> 
-Ontario, Canada
- 
-<div class="flag-ca"> 
-<img src="/screens/w-flag-ca.gif" alt="Canada Flag" title="Canada Flag"> 
-</div> 
- 
-</div> 
- 
-<div class="text-place-to-grow">A <b>place</b> to <b>grow</b></div> 
- 
-<ul id="mainNav" title="Main Navigation"> 
-<li><a href="http://www.wpl.ca/" title="WPL Home Page">Home</a></li> 
-<li id="viewRecord"><a href="/patroninfo~S3/top">View Your Account</a></li><!-- /top means it bypasses login screen if already logged in --> 
-
-<li><a href="http://www.wpl.ca/site/kidbits/kidbits.asp" title="This section is just for kids!">KidBits</a></li> 
-<li><a href="http://www.wpl.ca/site/4Teens/4teens.asp" title="Homework, reading, fun, life, your turn!">/4teens</a></li> 
-<li><a href="http://www.wpl.ca/site/goodreads/good_reads.asp" title="Looking for a good book? This is the place">Reader's Corner</a></li> 
-<li><a href="http://www.wpl.ca/site/ebranch/ebranch.asp" title="A wide range of virtual collections and services, open 24 hours">e-Branch</a></li> 
-</ul> 
- 
-</div> 
- 
-<div id="sidebar-show" onclick="document.getElementById('sidebar').style.display = 'block'; document.getElementById('sidebar-show').style.display = 'none';" title="Show sidebar">Show sidebar</div> 
- 
-<div id="sidebar" title="Search Help Navigation"> 
- 
-<img id="sidebar-closebox" title="Hide sidebar"
-	onclick="document.getElementById('sidebar').style.display = 'none';
-		document.getElementById('sidebar-show').style.display = 'block';"
-	src="/screens/w-close.gif" width="14" height="13" alt="Hide sidebar"> 
- 
-<ul> 
-<li id="small-print"><a href="/search~S3">Small Print</a> 
-
-<li id="large-print"><a href="/search~S4">Large Print</a> 
-<li id="sidebar-searchCatalogue"><a href="/search~S3">Search Catalogue</a> 
-	<ul> 
-	<li><a href="/search~S3/X">Keyword</a></li> 
-	<li><a href="/search~S3/t">Title</a></li> 
-	<li><a href="/search~S3/a">Author</a></li> 
-	<li><a href="/search~S3/s">Series</a></li> 
-	<li><a href="/search~S3/d">Subject</a></li> 
-	<li><a href="/search~S3/c">Call Number</a></li> 
-	<li><a href="/search~S3/i"><acronym title="International Standard Book Number">ISBN</acronym>/<acronym title="International Standard Serial Number">ISSN</acronym></a></li> 
-	</ul> 
-	</li> 
-
-<li id="sidebar-articles"><a href="http://www.wpl.ca/site/ebranch/ebranch_databases_and_weblinks.asp">Databases &amp; WebLinks</a></li> 
-<li id="sidebar-searchInternet"><a href="http://www.wpl.ca/site/ebranch/ebranch_internet_search_engines.asp">Search Internet</a></li> 
- 
-<li id="sidebar-renew"><a href="/patroninfo~S3/top">Renew Items</a></li><!-- /top means it bypasses login screen if already logged in --> 
- 
-</ul> 
- 
-</div> 
- 
-</div><!--toplogo--> 
-<div id="main"> 
-<font color="purple">You are logged in to Kitchener and Waterloo Public Libraries                                    /WPL as: </font><font color="purple" size="+2">MY NAME</font><BR> 
-<br /> 
-<!--this is default <patronview_web>--> 
- 
-
-<!-- default form outer table begin --> 
-<table lang="en" class="patDisplay"> 
-<tr class="patDisplay"> 
-<td width="50%" class="patDisplay"> 
-<table  class="patInfo"><tr class="patInfo"> 
-<td valign="top" class="patInfo"> 
-<strong>MY NAME</strong><br /> 
-100 Regina Street S<br /> 
-WATERLOO, ON.   N2J 4A8<br /> 
-519-886-1550<br /> 
-EXP DATE:12-04-2009<br /> 
-</td> 
-
-</tr><tr class="patInfo"><td class="patInfo"> 
-<form> 
-<a href="/logout~S3?" target="_self"><img src="/screens/b-logout.gif" alt="Log Out" border="0" /></a> 
-<br /> 
-</form> 
-</td></tr> 
-</table> 
-</td><td width="50%" class="patDisplayFunc"> 
-<table  class="patFuncBtns"> 
-<form method="POST"> 
-<tr class="patFuncBtns"><td class="patFuncBtns"> 
-<a href="#" onClick="return open_new_window( '/patroninfo~S3/XXXXXXX/newpin' )">Modify your PIN</a> 
-</td></tr> 
-<tr class="patFuncBtns"><td class="patFuncBtns"> 
-<a href="/patroninfo~S3/XXXXXXX/items" target="_self">957 Items currently checked out</a> 
-
-</td></tr> 
-<tr class="patFuncBtns"><td class="patFuncBtns"> 
-<a href="/patroninfo~S3/XXXXXXX/holds" target="_self">1 request (hold).</a> 
-</td></tr> 
-<tr class="patFuncBtns"><td class="patFuncBtns"> 
-<a href="/patroninfo~S3/XXXXXXX/msg" target="_self">IMPORTANT LIBRARY INFORMATION</a> 
-</td></tr> 
-<tr class="patFuncBtns"><td class="patFuncBtns"> 
-<a href="/patroninfo~S3/XXXXXXX/searchcatalog" target="_self">Search the Catalog</a> 
-</td></tr> 
-<tr class="patFuncBtns"><td class="patFuncBtns"> 
-<a href="/patroninfo~S3/XXXXXXX/getpsearches" target="_self">Preferred Searches</a> 
-</td></tr> 
-
-<tr class="patFuncBtns"><td class="patFuncBtns"> 
-<a href="/patroninfo~S3/XXXXXXX/readinghistory" target="_self">My Reading History</a> 
-</td></tr> 
-</form> 
- 
-</table> 
-</td></tr> 
-</table> 
-<!-- outer table end --> 
-<br /> 
-</div><!--main--> 
-<div id="botlogo"><ul> WPL Catalogue may not be available on Mon 8-9 am for scheduled maintenance.<br> Your library account may not be available during scheduled system maintenance 11-11:30 pm Mon
- to Thurs, & 6-6:30 pm Fri-Sun.</div><!--botlogo--> 
-
-<!--this is customized <screens/w-botlogo.html>--> 
- 
-</body> 
-</html> ''', '', '', ''))
+<!--this is customized <screens/patronview_web_s3.html>-->
+''', '', '', ''))
     card_info = w.get_status()
     assert datetime.date(2009,12,4) == card_info.expires
 
@@ -723,23 +896,23 @@ def test__get_status__wpl_login__finds_correct_holds_url():
       <td valign=top> 
 	<div class="patNameAddress"> 
 	  <div> 
-	    <a href="/patroninfo~S3/4249154/holds" target="_self">4 requests (holds).</a> 
+	    <a href="/patroninfo~S3/XXXXXXX/holds" target="_self">4 requests (holds).</a> 
 	  </div> 
 	  <div> 
-	    <a href="/patroninfo~S3/4249154/items" target="_self">5 Items currently checked out</a> 
+	    <a href="/patroninfo~S3/XXXXXXX/items" target="_self">5 Items currently checked out</a> 
 	  </div> 
 	</div> 
       </td> 
       <td> 
 	<div class="patActionsLinks"> 
 	  <div> 
-	    <a href="#" onClick="return open_new_window( '/patroninfo~S3/4249154/newpin' )">Modify your PIN</a> 
+	    <a href="#" onClick="return open_new_window( '/patroninfo~S3/XXXXXXX/newpin' )">Modify your PIN</a> 
 	  </div> 
 	  <div><p> 
-	      <a href="/patroninfo~S3/4249154/readinghistory" target="_self">My Reading History</a> 
+	      <a href="/patroninfo~S3/XXXXXXX/readinghistory" target="_self">My Reading History</a> 
 	  </p></div> 
 	  <div><p> 
-	      <a href="/patroninfo~S3/4249154/getpsearches" target="_self">Preferred Searches</a> 
+	      <a href="/patroninfo~S3/XXXXXXX/getpsearches" target="_self">Preferred Searches</a> 
 	  </p></div> 
 	</div> 
       </td> 
@@ -751,7 +924,7 @@ def test__get_status__wpl_login__finds_correct_holds_url():
   <tr><td align="left"><a href="/BLAH"> Either/Or / Bo/o! </a></td></tr>
   </table>''', '#items', '#logout'))
     status = w.get_status()
-    assert 'https://books.kpl.org/patroninfo~S3/4249154/holds' == status.holds[0].holds_url
+    assert 'https://books.kpl.org/patroninfo~S3/XXXXXXX/holds' == status.holds[0].holds_url
 
 
 def test__get_status__wpl_login_no_holds__finds_no_holds():
@@ -762,20 +935,20 @@ def test__get_status__wpl_login_no_holds__finds_no_holds():
       <td valign=top> 
 	<div class="patNameAddress"> 
 	  <div> 
-	    <a href="/patroninfo~S3/4249154/items" target="_self">5 Items currently checked out</a> 
+	    <a href="/patroninfo~S3/XXXXXXX/items" target="_self">5 Items currently checked out</a> 
 	  </div> 
 	</div> 
       </td> 
       <td> 
 	<div class="patActionsLinks"> 
 	  <div> 
-	    <a href="#" onClick="return open_new_window( '/patroninfo~S3/4249154/newpin' )">Modify your PIN</a> 
+	    <a href="#" onClick="return open_new_window( '/patroninfo~S3/XXXXXXX/newpin' )">Modify your PIN</a> 
 	  </div> 
 	  <div><p> 
-	      <a href="/patroninfo~S3/4249154/readinghistory" target="_self">My Reading History</a> 
+	      <a href="/patroninfo~S3/XXXXXXX/readinghistory" target="_self">My Reading History</a> 
 	  </p></div> 
 	  <div><p> 
-	      <a href="/patroninfo~S3/4249154/getpsearches" target="_self">Preferred Searches</a> 
+	      <a href="/patroninfo~S3/XXXXXXX/getpsearches" target="_self">Preferred Searches</a> 
 	  </p></div> 
 	</div> 
       </td> 
@@ -794,20 +967,20 @@ def test__get_status__wpl_login_no_items__finds_no_items():
       <td valign=top> 
 	<div class="patNameAddress"> 
 	  <div> 
-	    <a href="/patroninfo~S3/4249154/holds" target="_self">4 requests (holds).</a> 
+	    <a href="/patroninfo~S3/XXXXXXX/holds" target="_self">4 requests (holds).</a> 
 	  </div> 
 	</div> 
       </td> 
       <td> 
 	<div class="patActionsLinks"> 
 	  <div> 
-	    <a href="#" onClick="return open_new_window( '/patroninfo~S3/4249154/newpin' )">Modify your PIN</a> 
+	    <a href="#" onClick="return open_new_window( '/patroninfo~S3/XXXXXXX/newpin' )">Modify your PIN</a> 
 	  </div> 
 	  <div><p> 
-	      <a href="/patroninfo~S3/4249154/readinghistory" target="_self">My Reading History</a> 
+	      <a href="/patroninfo~S3/XXXXXXX/readinghistory" target="_self">My Reading History</a> 
 	  </p></div> 
 	  <div><p> 
-	      <a href="/patroninfo~S3/4249154/getpsearches" target="_self">Preferred Searches</a> 
+	      <a href="/patroninfo~S3/XXXXXXX/getpsearches" target="_self">Preferred Searches</a> 
 	  </p></div> 
 	</div> 
       </td> 
