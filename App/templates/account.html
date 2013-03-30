@@ -7,12 +7,16 @@
     <script src="http://ajax.microsoft.com/ajax/jQuery/jquery-1.4.2.min.js"/></script>
     <script src="http://ajax.microsoft.com/ajax/jQuery.Validate/1.6/jQuery.Validate.min.js"/></script>
     <script>
-      $(document).ready(function(){
-         $("form").each(
-           function(){
-             $(this).validate(); 
-           });
-      });       
+      $(document).ready(function()
+      {
+          update_pin_field_visibility();
+          $('#library_id').change(update_pin_field_visibility);
+          $("form").each(
+            function()
+            {
+                $(this).validate(); 
+            });
+      });
     </script>
     <script type="text/javascript">
       function remove_card(patron_name, library_name, number, key)
@@ -24,30 +28,36 @@
       function change_pin()
       {
           var card_key = $($('td', '#edit_card')[0]).html();
-          window.location = '/changepin/' + card_key + '/' + $('#new_pin')[0].value;
+          window.location = '/changepin/' + card_key + '/' + $('#changed_pin')[0].value;
       }
 
-      function can_change_pin()
+      function set_whether_can_change_pin()
       {
-          $('#change_pin')[0].disabled = !$('#new_pin')[0].value;
+          $('#change_pin')[0].disabled = !$('#changed_pin')[0].value;
       }
-
 
       function edit_card(row)
       {
           $('#cardlist button').each( function(index, element) { element.disabled = true; } );
-
 
           $source_row = $(row);
           $edit_row = $source_row.clone();
           $edit_row.attr('id', 'edit_card');
           $('td:last', $edit_row).remove();
 
-          $pin_field = $('td:last', $edit_row);
-          $pin_field.html('<input id="new_pin" type="password" name="pin"/>');
-          $pin_field.keyup(can_change_pin);
-          $pin_field.mouseout(can_change_pin);
-          $pin_field.blur(can_change_pin);
+          if ( uses_pin($('.library_id', $source_row).html()) )
+          {
+              $pin_field = $('<td class="uses_pin"></td>');
+              $pin_field.html('<input id="changed_pin" type="password" name="pin" class="uses_pin"/>');
+              $pin_field.keyup(set_whether_can_change_pin);
+              $pin_field.mouseout(set_whether_can_change_pin);
+              $pin_field.blur(set_whether_can_change_pin);
+              $edit_row.append($pin_field);
+
+              $change_pin_button = $('<button id="change_pin" disabled="true" class="uses_pin">change pin</button>');
+              $change_pin_button.click(change_pin);
+              $edit_row.append($change_pin_button);
+          }
 
           $cancel_button = $('<button>cancel</button>');
           $cancel_button.click(cancel_card_edit);
@@ -56,10 +66,6 @@
           $remove_button = $('<button>remove</button>');
           $remove_button.click(remove_card);
           $edit_row.append($remove_button);
-
-          $change_pin_button = $('<button id="change_pin" disabled="true">change pin</button>');
-          $change_pin_button.click(change_pin);
-          $edit_row.append($change_pin_button);
 
           $('#pin_header').show();
 
@@ -73,6 +79,31 @@
           $('#edit_card').prev().show();
           $('#edit_card').remove();
           $('#cardlist button').each( function(index, element) { element.disabled = false; } );
+      }
+
+      function uses_pin(library_id)
+      {
+        {% for library in libraries %}
+            {% if library.type == 'rwl' %}return library_id == '{{ library.key() }}';{% endif %}
+        {% endfor %}
+      }
+
+      function update_pin_field_visibility()
+      {
+          $root = $('#addcard');
+          if ( uses_pin($('.library_id', $root).val()) )
+          {
+               $('.uses_pin', $root)
+                   .show()
+                   .addClass('required');
+          }
+          else
+          {
+               $('.uses_pin', $root)
+                   .hide()
+                   .removeClass('required');
+               $('input.uses_pin', $root).val('');
+          }
       }
 
   </script>
@@ -96,10 +127,11 @@
 {% for card in cards %}
   <tr>
     <td style="display:none">{{ card.key() }}</td>
+    <td style="display:none" class="library_id">{{ card.library.key() }}</td>
     <td>{{ card.name }}</td>
     <td>{{ card.library.name }}</td>
     <td>{{ card.number }}</td>
-    <td><!-- pin - usually not displayed --></td>
+
     <td><button onclick="edit_card(this.parentNode.parentNode)">edit</button></td>
 
   </tr>
@@ -121,7 +153,7 @@ You haven't added any cards yet.
     </tr>
     <tr>
       <td><label for="library_id">Library:</label></td>
-      <td><select name="library_id" class="required">
+      <td><select name="library_id" id="library_id" class="library_id">
               <option value="">-- Pick a library --</option>
               {% for library in libraries %}
                 <option value="{{ library.key() }}">{{ library.name }}</option>
@@ -132,9 +164,9 @@ You haven't added any cards yet.
       <td><label for="number">Card Number:</label></td>
       <td><input    type="text" size="60" name="number" class="required"/></td>
     </tr>
-    <tr>
+    <tr id="new_pin_input"  class="uses_pin">
       <td><label for="pin">PIN:</label></td>
-      <td><input type="password" name="pin" class="required"/></td>
+      <td><input type="password" name="pin"/></td>
     </tr>
     <tr>
       <td>&nbsp;</td>
