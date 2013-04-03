@@ -116,6 +116,7 @@ class LibraryAccount:
         response = self.fetcher(self.logout_url())
 
     def get_status(self):
+        expires = None
         try:
             login_response = self.login()
 
@@ -132,20 +133,23 @@ class LibraryAccount:
             if items_anchors:
                 self.items_url = urlparse.urljoin(self.login_url(), items_anchors[0]['href'])
 
-            self.expires = None
             expires_location = login_response.find('EXP DATE:')
             if expires_location >= 0:
                 expires_location += 9
                 expires_string = login_response[expires_location:expires_location+10]
-                self.expires = datetime.datetime.strptime(expires_string, '%m-%d-%Y').date()
+                expires = datetime.datetime.strptime(expires_string, '%m-%d-%Y').date()
         
             items = self.get_items()
 
         finally:
-            self.logout()
+            try:
+                self.logout()
+            except:
+                logging.error('unable to log out', exc_info=True)
+
         status = CardStatus(self.card, items, holds)
-        if self.expires:
-            status.expires = self.expires
+        if expires:
+            status.expires = expires
         return status
         
 
