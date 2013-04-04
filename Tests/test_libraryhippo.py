@@ -39,7 +39,7 @@ def test__build_template__card_expires_in_one_week__message_added_to_template(st
     
     template_values = libraryhippo.build_template([status], family)
     assert 1 == len(template_values['info'])
-    assert 'card expires on 2010-02-08' == template_values['info'][0].message
+    assert 'card expires on 8&nbsp;February (Monday)' == template_values['info'][0].message
 
     
 def test__build_template__card_expires_in_eight_days__no_message_added_to_template(status):
@@ -50,7 +50,8 @@ def test__build_template__card_expires_in_eight_days__no_message_added_to_templa
     assert 0 == len(template_values['info'])
 
 
-def test__build_template__card_expired__expired_message_added_to_template(status):
+def test__build_template__card_expired__expired_message_added_to_template_as_yyyymmdd(status):
+    # because people may leave their cards expired for years, and it'd be nice to tell
     status.expires = datetime.date(2010, 1, 15)
     family = None
     

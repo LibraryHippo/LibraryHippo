@@ -302,7 +302,7 @@ def build_template(statuses, family):
             elif status.expires == today:
                 message = 'card expires today'
             else:
-                message = 'card expires on ' + str(status.expires)
+                message = 'card expires on ' + utils.filters.duedate(status.expires)
             template_values['info'] += [data.CardInfo(status.library_name, status.patron_name, message)]
 
     return template_values
