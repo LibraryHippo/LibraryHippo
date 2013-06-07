@@ -990,3 +990,68 @@ def test__get_status__wpl_login_no_items__finds_no_items():
 </html>''', '#holds', '#items', '#logout'))
     status = w.get_status()
     assert status.items == []
+
+def test__login_wpl_format_2013_06_07__can_parse_the_login_screen():
+    w = wpl.LibraryAccount(MyCard(), MyOpener('''
+ 	<form id="fm1" class="fm-v clearfix" method="post" action="/iii/cas/login?service=https://books.kpl.org/patroninfo~S3/j_acegi_cas_security_check&amp;lang=eng&amp;scope=3">
+	<!--display any errors-->
+	
+	<!-- Message from client webapp to be displayed on the CAS login screen -->
+  	<div id="clientmessage">
+	<!--display any errors-->
+	
+  	</div> <!-- end clientmessage -->
+  	<!--start theForm2-->
+	
+									
+	<!-- Message from client webapp to be displayed on the CAS login screen -->
+  	<div id="clientmessage">
+	<!--display any errors-->
+  	</div> <!-- end clientmessage -->
+	   
+	<!--display login form-->
+	<span style="padding-left:1.8em;"><h3>Library Account Login</h3></span>
+	<div id="login">
+	   <fieldset>
+	        <label for="name">First and Last Name:</label>
+            <div class="loginField">
+              <input id="name" name="name" class="required" tabindex="3" accesskey="n" type="text" value="" size="20" maxlength="40"/>
+	        </div>
+	      
+            <fieldset class="barcodeAltChoice">
+            <!--<legend>Enter your barcode or login name</legend>-->
+                    
+              <label for="code">Library card number<br />(no spaces):</label>
+              <div class="loginField">
+        	    <input id="code" name="code" class="required" tabindex="4" accesskey="b" type="text" size="20" maxlength="40" />
+		      </div>
+                  
+            </fieldset>
+            
+			<!--<div id="ipssopinentry">
+            <label for="pin">Personal Identification Number (PIN):</label>
+            <div class="loginFieldBg">
+              <input id="pin" name="pin" class="required" tabindex="6" accesskey="p" type="password" value="" size="20" maxlength="40" />
+	        </div>
+			</div>-->
+	<!--end theForm2-->
+	<!--start theForm3-->
+
+        <!-- This button is hidden unless using mobile devices. Even if hidden it enables Enter key to submit. -->
+        <input type="submit" name="Log In" class="loginSubmit" tabindex="35" />
+	  </fieldset>
+	</div>  <!-- end login -->
+    <div class="clearfloats"></div>
+    <div class="formButtons">
+    	<a href="#" onclick="document.forms['fm1'].submit();" tabindex="40"><div onmousedown="this.className='pressedState';" onmouseout="this.className='';" onmouseup="this.className='';"><div class="buttonSpriteDiv"><span class="buttonSpriteSpan1">
+<span class="buttonSpriteSpan2">Submit</span></span></div></div></a>
+  	</div>
+
+  	<!--end theForm3-->
+	<!-- Spring Web Flow requirements must be in a certain place -->
+	<input type="hidden" name="lt" value="_cF3646058-103E-2F3B-C9DB-0C9931EDB267_k24CDA5F8-E174-085D-7570-0D56ADBFE0E7" />
+	<input type="hidden" name="_eventId" value="submit" />
+	</form>''',
+                                              '''"patNameAddress"''')) # "patNameAddress" is enough to make the login think it worked
+    w.login()
+

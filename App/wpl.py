@@ -76,10 +76,11 @@ class LibraryAccount:
         login_page = BeautifulSoup(self.fetcher(self.login_url()).content)
 
         for input_field in login_page.findAll(name='input'):
+
             if input_field['type'] == 'submit':
                 form_fields['submit'] = input_field['name']
             else:
-                form_fields[input_field['name']] = input_field['value']
+                form_fields[input_field['name']] = input_field.get('value', '')
         
         form_fields.update({
           'name': self.card.name,
