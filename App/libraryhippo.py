@@ -32,6 +32,11 @@ import utils.filters
 from gael.urlfetch import *
 from gael.memcache import *
 
+logging.info('original recursion limit is %d', sys.getrecursionlimit())
+logging.info('setting recursion limit to 20000')
+sys.setrecursionlimit(20000)
+logging.info('new recursion limit is %d', sys.getrecursionlimit())
+
 clock = utils.times.Clock()
 
 class MyHandler(webapp2.RequestHandler):
