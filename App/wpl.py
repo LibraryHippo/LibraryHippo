@@ -171,9 +171,14 @@ class LibraryAccount:
                     self.parse_title(cell, entry)
                 elif columnName == 'PICKUP LOCATION':
                     if cell.select:
-                        entry.pickup = cell.select.findAll('option', selected='selected')[0].string
+                        pickup = cell.select.findAll('option', selected='selected')[0].string
                     else:
-                        entry.pickup = cell.string.strip()
+                        pickup = cell.string
+
+                    # make sure we clean up the string
+                    # also ensures that we're saving a true string,
+                    # not a NaviagableString, which pickles terribly!
+                    entry.pickup = str(pickup).strip()
                         
                 elif columnName == 'STATUS':
                     entry.status = parse_hold_status(cell)

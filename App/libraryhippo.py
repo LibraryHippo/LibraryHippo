@@ -32,11 +32,6 @@ import utils.filters
 from gael.urlfetch import *
 from gael.memcache import *
 
-logging.info('original recursion limit is %d', sys.getrecursionlimit())
-logging.info('setting recursion limit to 20000')
-sys.setrecursionlimit(20000)
-logging.info('new recursion limit is %d', sys.getrecursionlimit())
-
 clock = utils.times.Clock()
 
 class MyHandler(webapp2.RequestHandler):
@@ -378,11 +373,15 @@ class CheckCardBase(MyHandler):
 
             name = str(card.key())
 
-            checked_card = (data.CheckedCard.all().filter('card =', card).get()
-                            or data.CheckedCard())
+            checked_card_key = data.CheckedCard.all(keys_only=True).filter('card =', card).get()
+            if checked_card_key:
+                checked_card = data.CheckedCard(key=checked_card_key)
+            else:
+                checked_card = data.CheckedCard()
 
             checked_card.card = card
             checked_card.payload = card_status
+            checked_card.datetime = clock.utcnow()
             checked_card.put()
         except:
             logging.error('Failed to save checked card. Continuing.', exc_info=True)
@@ -512,7 +511,7 @@ class ViewCheckedCards(MyHandler):
 class AuditLog(MyHandler):
     def get(self, page='1'):
         page = int(page,10)
-        now = datetime.datetime.utcnow()
+        now = clock.utcnow()
         events = []
         for e in data.Event.all() \
                 .filter('date_time_saved >', now - datetime.timedelta(days=page)) \

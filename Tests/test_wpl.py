@@ -64,9 +64,8 @@ def test__parse_holds__named_position__parses_position():
         ('TRACE', Hold.DELAYED),
         ):
         yield check, status, text
-    
-def test__parse_holds___location_dropdown__location_is_read():
-    response = BeautifulSoup('''<table lang="en" class="patFunc"><tr class="patFuncTitle">
+
+hold_with_pickup_dropdown = '''<table lang="en" class="patFunc"><tr class="patFuncTitle">
 <th colspan="6" class="patFuncTitle">
 6 HOLDS
 </th>
@@ -105,10 +104,18 @@ def test__parse_holds___location_dropdown__location_is_read():
 <td  class="patFuncFreeze" align="center"><input type="checkbox" name="freezeb2193902" /></td>
 </tr>
 </table>
-''')
+'''
+    
+def test__parse_holds___pickup_dropdown__pickup_is_read():
+    response = BeautifulSoup(hold_with_pickup_dropdown)
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     assert 'WPL McCormick Branch' == w.parse_holds(response)[0].pickup
 
+def test__parse_holds___pickup_dropdown__pickup_is_string():
+    '''makes for better pickling'''
+    response = BeautifulSoup(hold_with_pickup_dropdown)
+    w = wpl.LibraryAccount(MyCard(), MyOpener())
+    assert str == type(w.parse_holds(response)[0].pickup)
     
 def test__parse_holds___with_expiration_date__reads_expiration():
     response = BeautifulSoup(
