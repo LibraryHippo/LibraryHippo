@@ -311,49 +311,56 @@ def test__parse_status__status_notes_jammed_up_against_date__status_notes_found(
     assert ['IN LIBRARY USE'] == item.status_notes
 
 
-failing_login_response =  '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+failing_login_response =  '''
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <link rel="stylesheet" type="text/css" href="/scripts/ProStyles.css" />
-<link rel="stylesheet" type="text/css" href="/screens/k-stylesheet1.css" />
-    <title>Login | Kitchener Public Library</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=8;FF=3;OtherUA=4"><meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-    <meta name="viewport" content="width = device-width, user-scalable = no">
+<link rel="stylesheet" type="text/css" href="/screens/w-stylesheet3.css" />
+    <title>Library Log in</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=8;FF=3;OtherUA=4" />
+	<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+    <meta name="viewport" content="width=device-width,user-scalable=no" />
     <script type="text/javascript" src="/scripts/common.js"></script>
     <!--<link rel="stylesheet" type="text/css" href="/apps/CAS/resources/login_mobile.css">
-    <link rel="stylesheet" type="text/css" href="/apps/CAS/resources/login_s1_html.css" media="screen and (min-device-width: 481px)"> -->
+    <link rel="stylesheet" type="text/css" href="/apps/CAS/resources/login_s3_html.css" media="screen and (min-device-width: 481px)"> -->
     
-    <link rel="stylesheet" type="text/css" href="/apps/CAS/resources/login_mobile.css"  />
+    <link rel="stylesheet" type="text/css" href="/apps/CAS/resources/login_mobile_s3.css"  />
 	<style type="text/css" media="screen and (min-width: 481px)">
     <!--
-    @import url("/apps/CAS/resources/login_s1_html.css");
+    @import url("/apps/CAS/resources/login_s3_html.css");
     -->
     </style>
-    <!--[if IE]><link rel="stylesheet" type="text/css" href="/apps/CAS/resources/login_s1_html.css"  media="screen" /><![endif]-->
-    <link href="/apps/CAS/resources/login_mobile.css" rel="stylesheet" type="text/css" media="handheld, only screen and (max-device-width: 480px)" />
+    <!--[if IE]><link rel="stylesheet" type="text/css" href="/apps/CAS/resources/login_s3_html.css"  media="screen" /><![endif]-->
+    <!--<link href="/apps/CAS/resources/login_mobile.css" rel="stylesheet" type="text/css" media="handheld, only screen and (max-device-width: 480px)" />-->
     
 </head>
- 
+
 <body id="cas">
 <!--[if IE]>
 <div id="ie">
 <![endif]-->
 <div class="loginPage">
 
-<div class="loginTop"> 
+<div class="loginTop">
 &nbsp;<!-- Prevent div collapse -->
 <div class="loginTopLogo">
-<a href="http://books.kpl.org/search~S1/" tabindex="0"><img src="http://books.kpl.org/screens/k-logo-150x64.gif" alt=""></a>
+	<a href="http://www.wpl.ca" tabindex="0">
+		<img src="/screens/w-logo-137x60.gif" alt="">
+	</a>
 </div>
 </div>
 
 <!-- Use for library-only authentication: -->
 <div class="loginArea loginArea1Col"> 
+<!--<div style="text-align:center; background:#FF0077; color:black;" > 
+	<strong>Please Note:</strong> Holds placed online are currently not working. Please call us at 519-886-1310 to have staff help you place holds.
+	</div>-->
 <div class="clearfloats"></div>
 
  	<!--end theForm1-->
- 	<form id="fm1" class="fm-v clearfix" method="post" action="/iii/cas/login?service=https%3A%2F%2Fbooks.kpl.org%3A443%2Fpatroninfo~S1%2FIIITICKET&amp;scope=1">
-	<!--display any errors-->
+ 	<form id="fm1" class="fm-v clearfix" method="post" action="/iii/cas/login?service=https%3A%2F%2Fencore.kpl.org%3A443%2Fiii%2Fencore_wpl%2Fmyaccount?lang=eng&amp;suite=wpl&amp;scope=3">
+    <!--display any errors-->
 	<div id="status" class="errors">Sorry, the information you submitted was invalid. Please try again.</div>
 	<!-- Message from client webapp to be displayed on the CAS login screen -->
   	<div id="clientmessage">
@@ -362,40 +369,38 @@ failing_login_response =  '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transi
   	</div> <!-- end clientmessage -->
   	<!--start theForm2-->
 	
+									
 	<!-- Message from client webapp to be displayed on the CAS login screen -->
   	<div id="clientmessage">
 	<!--display any errors-->
   	</div> <!-- end clientmessage -->
 	   
 	<!--display login form-->
+	<span style="padding-left:1.8em;"><h3>Library Account Login</h3></span>
 	<div id="login">
-	  <fieldset>
-<br />
-	    <legend>Login to My Account</legend>
-<br />
+	   <fieldset>
 	        <label for="name">First and Last Name:</label>
-            <div class="loginFieldBg">
-              <input id="name" name="name" type="text" value="" size="25" maxlength="50" tabindex="15">
+            <div class="loginField">
+              <input id="name" name="name" class="required" tabindex="3" accesskey="n" type="text" value="" size="20" maxlength="40"/>
 	        </div>
 	      
             <fieldset class="barcodeAltChoice">
             <!--<legend>Enter your barcode or login name</legend>-->
                     
               <label for="code">Library card number<br />(no spaces):</label>
-              <div class="loginFieldBg">
-        	      <input id="code" name="code" type="text" value="" size="25" maxlength="50" tabindex="20">
+              <div class="loginField">
+        	    <input id="code" name="code" class="required" tabindex="4" accesskey="b" type="text" size="20" maxlength="40" />
 		      </div>
-            
-            
+                  
             </fieldset>
-<!--           
-			<div id="ipssopinentry">
+            
+			<!--<div id="ipssopinentry">
             <label for="pin">Personal Identification Number (PIN):</label>
             <div class="loginFieldBg">
-              <input id="pin" name="pin" type="password" value="" size="25" maxlength="50" tabindex="30">
+              <input id="pin" name="pin" class="required" tabindex="6" accesskey="p" type="password" value="" size="20" maxlength="40" />
 	        </div>
-			</div>
- -->           
+			</div>-->
+
 
 	<!--end theForm2-->
   	
@@ -405,33 +410,26 @@ failing_login_response =  '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transi
     
 	<!--start theForm3-->
   	
-            
 
-<br />
         <!-- This button is hidden unless using mobile devices. Even if hidden it enables Enter key to submit. -->
-        <input type="submit" name="Log In" class="loginSubmit" tabindex="35">
+        <input type="submit" name="Log In" class="loginSubmit" tabindex="35" />
 	  </fieldset>
 	</div>  <!-- end login -->
     <div class="clearfloats"></div>
     <div class="formButtons">
-    	<a href="#" onclick="document.forms['fm1'].submit();" tabindex="40"><div onmousedown="this.className='pressedState';" onmouseout="this.className='';" onmouseup="this.className='';"><div class="buttonSpriteDiv"><span class="buttonSpriteSpan1"><span class="buttonSpriteSpan2">Submit</span></span></div></div></a>
+    	<a href="#" onclick="document.forms['fm1'].submit();" tabindex="40"><div onmousedown="this.className='pressedState';" onmouseout="this.className='';" onmouseup="this.className='';"><div class="buttonSpriteDiv"><span class="buttonSpriteSpan1">
+<span class="buttonSpriteSpan2">Submit</span></span></div></div></a>
   	</div>
 <br />
 
-  	<!--end theForm3-->
-	<!-- Spring Web Flow requirements must be in a certain place -->
-	<input type="hidden" name="lt" value="_c6376BEA4-F99C-9E91-0357-36F3FFDD5524_k2481AD81-47AF-1042-7778-B55FD9268AF4" />
-	<input type="hidden" name="_eventId" value="submit" />
-	</form>
-	<!--start theForm4-->
-	
+<div style="display:none;">
 
 <!--Enable form focus-->
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 //Hide the main PIN entry if the new pin section is active.
-try { if ( document.getElementById("ipssonewpin") ) {
-	document.getElementById("ipssopinentry").style.display="none"; } }
-catch(err) {}
+//try { if ( document.getElementById("ipssonewpin") ) {
+//	document.getElementById("ipssopinentry").style.display="none"; } }
+//catch(err) {}
 
 //Look for the first field in the external patron part of the form. This field will get cursor focus.
 var ipssoFirstField;
@@ -454,8 +452,18 @@ if (keycode==13)
  document.forms[0].submit();
 }
 
-//--><!]]></script>
+//--><!]]>
+</script>
 
+  	<!--end theForm3-->
+	<!-- Spring Web Flow requirements must be in a certain place -->
+	<input type="hidden" name="lt" value="_c761F6248-082B-2453-47FE-DEBB4500C8AD_kF7718391-1925-2239-9B69-01CE8B941744" />
+	<input type="hidden" name="_eventId" value="submit" />
+	</form>
+	<!--start theForm4-->
+	
+
+</div>
 
 </div> <!-- end loginArea -->
 
@@ -464,9 +472,6 @@ if (keycode==13)
 <span class="loginActionText">New to the library?</span>
 <span class="loginActionScreenOnly"><a href="/selfreg">Create an account</a></span>
 <span class="loginActionSeparator"></span>
--->
-<!--
-<span class="loginActionScreenOnly"><a href="https://books.kpl.org/pinreset~S1" tabindex="45">Forget Your PIN?</a></span>
 -->
 </div>
 </div> <!-- loginPage -->
@@ -478,7 +483,7 @@ if (keycode==13)
 </body>
 </html>
 
-<!--this is customized </iiidb/http/apps//CAS/resources/ipsso_s1.html>-->
+<!--this is customized </iiidb/http/apps//CAS/resources/ipsso_s3.html>-->
 
 	<!--end theForm4-->
 '''

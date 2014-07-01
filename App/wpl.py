@@ -91,12 +91,12 @@ class LibraryAccount:
         
         response_data = response.content
 
-        if '"patNameAddress"' not in response_data:
+        if 'Sorry, the information you submitted was invalid. Please try again.' in response_data:
              l = LoginError(patron=self.card.name, library=self.card.library.name)
              logging.error('login failed: %s', l)
              raise l            
 
-        return response.content
+        return response_data
 
     def get_holds(self, holds_url):
         response = self.fetcher(holds_url)
@@ -128,11 +128,15 @@ class LibraryAccount:
                 holds_url = urlparse.urljoin(self.login_url(), holds_anchors[0]['href'])
                 holds = self.get_holds(holds_url)
             else:
+                logging.info('no link to holds found')
                 holds = []
                 
             items_anchors = souped_response.findAll(name='a', href=re.compile('/items$'))
             if items_anchors:
                 self.items_url = urlparse.urljoin(self.login_url(), items_anchors[0]['href'])
+            else:
+                logging.info('no link to items found')
+                                
 
             expires_location = login_response.find('EXP DATE:')
             if expires_location >= 0:
