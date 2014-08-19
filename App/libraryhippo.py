@@ -16,7 +16,6 @@ from google.appengine.ext import db
 import webapp2
 from webapp2_extras import jinja2
 
-from google.appengine.runtime import DeadlineExceededError
 from google.appengine.ext.webapp import template
 
 import datetime
@@ -128,7 +127,7 @@ class ChangePin(MyHandler):
             logging.info('updating pin for card ' + card.to_xml())
             card.pin = new_pin
             card.put()
-            logging.info('saved card');
+            logging.info('saved card')
         else:
             logging.error('request to update pin for card card ' + card.to_xml() + ' that belongs to family ' + family.to_xml())
         self.redirect('/account')
@@ -317,46 +316,30 @@ class Summary(MyHandler):
         self.template_values['cards'] = [card for card in family.card_set]
         self.template_values['family'] = family
         
-        if False:
-            timeout_card = data.Card()
-            timeout_card.library = self.template_values['cards'][0].library
-            timeout_card.name = 'Blair Timeout';
-            timeout_card.number = 'timeout';
-            timeout_card.key = 'timeout';
-
-            failure_card = data.Card()
-            failure_card.library = self.template_values['cards'][0].library
-            failure_card.name = 'Blair Failure';
-            failure_card.number = 'failure';
-            failure_card.key = 'failure';
-
-            self.template_values['cards'].append(failure_card);
-
-            self.template_values['cards'].append(timeout_card);
-
         self.render('summary.html')
 
 class CheckCardBase(MyHandler):
     def check_card(self, user, card):
         fetcher = Transcriber(PayloadEncoder(RedirectFollower(CookieHandler(urlfetch.fetch))))
-        loader = all_libraries.create(card, fetcher)
+        library_account = all_libraries.create(card, fetcher)
 
         try:
-            logging.info('checking ' + loader.card.name + ' ' + loader.library.name)
-            if True and card.name == 'timeout':
+            logging.info('checking ' + library_account.card.name + ' ' + library_account.library.name)
+            if library_account.card.number == 'timeout':
                 logging.info('special timeout!')
+                time.sleep(1)
                 raise DownloadError('ApplicationError: 5')
             else:
-                card_status = loader.get_status()
-                self.save_checked_card(card, card_status)
+                card_status = library_account.get_status()
+                self.save_checked_card(library_account.card, card_status)
 
         except:
             e = data.CardCheckFailed.For(user, card)
             logging.info('event = ' +  str(e.__dict__))
             e.put()
-            logging.error('failed to check ' + loader.card.name + ' ' + loader.library.name, exc_info=True)
+            logging.error('failed to check ' + library_account.card.name + ' ' + library_account.library.name, exc_info=True)
 
-            card_status = data.CardStatus(card)
+            card_status = data.CardStatus(library_account.card)
             card_status.add_failure()
 
             for transaction in fetcher.transactions:
@@ -390,10 +373,6 @@ class CheckCardBase(MyHandler):
 class CheckCard(CheckCardBase):
     @uses_family
     def get(self, user, family, card_key):
-        if card_key == 'timeout':
-            time.sleep(1)            
-            raise(Exception('bad card'))
-        
         logging.info('CheckCard called ' + card_key)
         card = data.Card.get(card_key)
         if family.key() != card.family.key():
