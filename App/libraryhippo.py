@@ -11,17 +11,17 @@ from google.appengine.api import mail
 from google.appengine.api import users
 from google.appengine.api import urlfetch
 from google.appengine.api import taskqueue
-from google.appengine.api.urlfetch import DownloadError, Error
+from google.appengine.api.urlfetch import Error
 from google.appengine.ext import db
 import webapp2
 from webapp2_extras import jinja2
 
-from google.appengine.runtime import DeadlineExceededError
 from google.appengine.ext.webapp import template
 
 import datetime
 import time
-
+from cardchecker import CardChecker
+import errors
 
 import all_libraries
 import data
@@ -128,7 +128,7 @@ class ChangePin(MyHandler):
             logging.info('updating pin for card ' + card.to_xml())
             card.pin = new_pin
             card.put()
-            logging.info('saved card');
+            logging.info('saved card')
         else:
             logging.error('request to update pin for card card ' + card.to_xml() + ' that belongs to family ' + family.to_xml())
         self.redirect('/account')
@@ -234,15 +234,6 @@ def make_test_summary(family):
 
     return template_values
 
-def is_transient_error(e):
-    result =  (isinstance(e, DeadlineExceededError) or
-               (isinstance(e, DownloadError) and
-                (e.message.strip() == 'ApplicationError: 5' or
-                 e.message.strip() == 'ApplicationError: 2')))
-    logging.debug('is_transient_error: testing %s %s: result = %s' % (type(e), e, result))
-
-    return result
-
 def build_template(statuses, family):
     holds = sum((status.holds for status in statuses), [])
     items = sum((status.items for status in statuses), [])
@@ -317,54 +308,19 @@ class Summary(MyHandler):
         self.template_values['cards'] = [card for card in family.card_set]
         self.template_values['family'] = family
         
-        if False:
-            timeout_card = data.Card()
-            timeout_card.library = self.template_values['cards'][0].library
-            timeout_card.name = 'Blair Timeout';
-            timeout_card.number = 'timeout';
-            timeout_card.key = 'timeout';
-
-            failure_card = data.Card()
-            failure_card.library = self.template_values['cards'][0].library
-            failure_card.name = 'Blair Failure';
-            failure_card.number = 'failure';
-            failure_card.key = 'failure';
-
-            self.template_values['cards'].append(failure_card);
-
-            self.template_values['cards'].append(timeout_card);
-
         self.render('summary.html')
 
 class CheckCardBase(MyHandler):
     def check_card(self, user, card):
         fetcher = Transcriber(PayloadEncoder(RedirectFollower(CookieHandler(urlfetch.fetch))))
-        loader = all_libraries.create(card, fetcher)
 
+        checker = CardChecker()
         try:
-            logging.info('checking ' + loader.card.name + ' ' + loader.library.name)
-            if True and card.name == 'timeout':
-                logging.info('special timeout!')
-                raise DownloadError('ApplicationError: 5')
-            else:
-                card_status = loader.get_status()
-                self.save_checked_card(card, card_status)
+            card_status = checker.check(user, card, fetcher)
+        except errors.TransientError as e:
+            self.response.set_status(504)
+            card_status = e.card_status
 
-        except:
-            e = data.CardCheckFailed.For(user, card)
-            logging.info('event = ' +  str(e.__dict__))
-            e.put()
-            logging.error('failed to check ' + loader.card.name + ' ' + loader.library.name, exc_info=True)
-
-            card_status = data.CardStatus(card)
-            card_status.add_failure()
-
-            for transaction in fetcher.transactions:
-                logging.debug(transaction)
-
-            exception_type, exception_value, exception_trace = sys.exc_info()
-            if is_transient_error(sys.exc_info()[1]):
-                self.response.set_status(504)
         return card_status
 
     def save_checked_card(self, card, card_status):
@@ -390,10 +346,6 @@ class CheckCardBase(MyHandler):
 class CheckCard(CheckCardBase):
     @uses_family
     def get(self, user, family, card_key):
-        if card_key == 'timeout':
-            time.sleep(1)            
-            raise(Exception('bad card'))
-        
         logging.info('CheckCard called ' + card_key)
         card = data.Card.get(card_key)
         if family.key() != card.family.key():
