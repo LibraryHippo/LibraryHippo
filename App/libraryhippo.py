@@ -11,7 +11,7 @@ from google.appengine.api import mail
 from google.appengine.api import users
 from google.appengine.api import urlfetch
 from google.appengine.api import taskqueue
-from google.appengine.api.urlfetch import DownloadError, Error
+from google.appengine.api.urlfetch import Error
 from google.appengine.ext import db
 import webapp2
 from webapp2_extras import jinja2
@@ -20,7 +20,8 @@ from google.appengine.ext.webapp import template
 
 import datetime
 import time
-
+from cardchecker import CardChecker
+import errors
 
 import all_libraries
 import data
@@ -233,15 +234,6 @@ def make_test_summary(family):
 
     return template_values
 
-def is_transient_error(e):
-    result =  (isinstance(e, DeadlineExceededError) or
-               (isinstance(e, DownloadError) and
-                (e.message.strip() == 'ApplicationError: 5' or
-                 e.message.strip() == 'ApplicationError: 2')))
-    logging.debug('is_transient_error: testing %s %s: result = %s' % (type(e), e, result))
-
-    return result
-
 def build_template(statuses, family):
     holds = sum((status.holds for status in statuses), [])
     items = sum((status.items for status in statuses), [])
@@ -321,33 +313,14 @@ class Summary(MyHandler):
 class CheckCardBase(MyHandler):
     def check_card(self, user, card):
         fetcher = Transcriber(PayloadEncoder(RedirectFollower(CookieHandler(urlfetch.fetch))))
-        library_account = all_libraries.create(card, fetcher)
 
+        checker = CardChecker()
         try:
-            logging.info('checking ' + library_account.card.name + ' ' + library_account.library.name)
-            if library_account.card.number == 'timeout':
-                logging.info('special timeout!')
-                time.sleep(1)
-                raise DownloadError('ApplicationError: 5')
-            else:
-                card_status = library_account.get_status()
-                self.save_checked_card(library_account.card, card_status)
+            card_status = checker.check(user, card, fetcher)
+        except errors.TransientError as e:
+            self.response.set_status(504)
+            card_status = e.card_status
 
-        except:
-            e = data.CardCheckFailed.For(user, card)
-            logging.info('event = ' +  str(e.__dict__))
-            e.put()
-            logging.error('failed to check ' + library_account.card.name + ' ' + library_account.library.name, exc_info=True)
-
-            card_status = data.CardStatus(library_account.card)
-            card_status.add_failure()
-
-            for transaction in fetcher.transactions:
-                logging.debug(transaction)
-
-            exception_type, exception_value, exception_trace = sys.exc_info()
-            if is_transient_error(sys.exc_info()[1]):
-                self.response.set_status(504)
         return card_status
 
     def save_checked_card(self, card, card_status):
