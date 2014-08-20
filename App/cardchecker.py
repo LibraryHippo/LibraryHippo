@@ -9,6 +9,15 @@ import all_libraries
 import data
 import errors
 
+def is_transient_error(e):
+    result = ((type(e).__name__ == 'DeadlineExceededError') or
+              (type(e).__name__ == 'DownloadError') and
+               (e.message.strip() == 'ApplicationError: 5' or
+                e.message.strip() == 'ApplicationError: 2'))
+    logging.debug('is_transient_error: testing [%s] [%s]: result = [%s]' % (type(e), e, result))
+
+    return result
+
 class CardChecker:
 
     def check(self, user, card, fetcher):
@@ -40,19 +49,10 @@ class CardChecker:
 
             exception_type, exception_value, exception_trace = sys.exc_info()
 
-            if self.is_transient_error(sys.exc_info()[1]):
+            if is_transient_error(sys.exc_info()[1]):
                 raise errors.TransientError(card_status)
 
         return card_status
-
-    def is_transient_error(self, e):
-        result =  (isinstance(e, DeadlineExceededError) or
-                   (isinstance(e, DownloadError) and
-                    (e.message.strip() == 'ApplicationError: 5' or
-                     e.message.strip() == 'ApplicationError: 2')))
-        logging.debug('is_transient_error: testing [%s] [%s]: result = [%s]' % (type(e), e, result))
-
-        return result
 
     def save_checked_card(self, card, card_status):
         try:
