@@ -4,9 +4,9 @@ import pytest
 import gael.testing
 gael.testing.add_appsever_import_paths()
 
-import google.appengine.runtime
-import google.appengine.runtime.apiproxy_errors
-import google.appengine.api.urlfetch
+import google.appengine.runtime 			# NOQA
+import google.appengine.runtime.apiproxy_errors	# NOQA
+import google.appengine.api.urlfetch 			# NOQA
 
 import cardchecker
 

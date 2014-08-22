@@ -3,8 +3,9 @@
 from BeautifulSoup import BeautifulSoup
 import logging
 import re
+import datetime
 
-from data import CardStatus
+from data import CardStatus, LoginError
 import wpl
 
 class LibraryAccount(wpl.LibraryAccount): 
@@ -35,7 +36,6 @@ class LibraryAccount(wpl.LibraryAccount):
                     logging.info('no link to items found')
 
 
-                holds_anchors = main_page.findAll(name='iframe', src=re.compile('/holds$'))
                 if holds_url:
                     holds = self.get_holds(holds_url)
                     logging.info('holds_url = %s', holds_url)

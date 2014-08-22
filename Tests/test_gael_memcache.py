@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from gael.memcache import *
+from gael.memcache import memoize
 
 class MyCache:
     def __init__(self):

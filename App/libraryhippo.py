@@ -1,36 +1,23 @@
-import sys
 import logging
-import cgi
-import wsgiref.handlers
-import urllib
 import uuid
-import os
-import traceback
 
-from google.appengine.api import mail
 from google.appengine.api import users
 from google.appengine.api import urlfetch
 from google.appengine.api import taskqueue
-from google.appengine.api.urlfetch import Error
 from google.appengine.ext import db
 import webapp2
 from webapp2_extras import jinja2
 
-from google.appengine.ext.webapp import template
-
 import datetime
-import time
 from cardchecker import CardChecker
 import errors
 
-import all_libraries
 import data
 from app_engine_util import uses_family, send_email
 import utils
 import utils.times
 import utils.filters
-from gael.urlfetch import *
-from gael.memcache import *
+from gael.urlfetch import Transcriber, PayloadEncoder, RedirectFollower, CookieHandler
 
 clock = utils.times.Clock()
 
@@ -212,10 +199,6 @@ class AddResponsible(MyHandler):
 def make_test_summary(family):
     card = family.card_set[0]
 
-    loader = all_libraries.create(card, None)
-    
-    cutoff = clock.today() + datetime.timedelta(days=3)
-
     h = data.Hold(card.library, card)
     h.title = 'A Book'
     h.author = 'Some Author'
@@ -322,26 +305,6 @@ class CheckCardBase(MyHandler):
             card_status = e.card_status
 
         return card_status
-
-    def save_checked_card(self, card, card_status):
-        try:
-            logging.info('saving checked card for ' + card_status.patron_name)
-
-            name = str(card.key())
-
-            checked_card_key = data.CheckedCard.all(keys_only=True).filter('card =', card).get()
-            if checked_card_key:
-                checked_card = data.CheckedCard(key=checked_card_key)
-            else:
-                checked_card = data.CheckedCard()
-
-            checked_card.card = card
-            checked_card.payload = card_status
-            checked_card.datetime = clock.utcnow()
-            checked_card.put()
-        except:
-            logging.error('Failed to save checked card. Continuing.', exc_info=True)
-    
 
 class CheckCard(CheckCardBase):
     @uses_family
@@ -545,11 +508,6 @@ class MigrateUserToPrincipal(MyHandler):
 
         self.redirect('/account')
 
-class Error(MyHandler):
-    @uses_family
-    def get(self):
-        raise(Exception('test exception'))
-
 class NotFound(MyHandler):
     def get(self):
         self.render('notfound.html')
@@ -633,7 +591,7 @@ handlers = [
     ('/$', Welcome),
     ]
 
-for c in (Error, About, Summary, Account, SaveFamily, AddResponsible, SaveCard, RemoveResponsible, Logout):
+for c in (About, Summary, Account, SaveFamily, AddResponsible, SaveCard, RemoveResponsible, Logout):
     handlers.append(('/' + c.__name__.lower() + '$', c))
 
 for c in (ListFamilies, PopulateData, MigrateLibraries, MigrateCards, NotifyAll, CheckAllCards, StopImpersonating):
