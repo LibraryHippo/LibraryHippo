@@ -6,7 +6,6 @@ gael.testing.add_appsever_import_paths()
 from data import Hold
 from fakes import MyCard, MyLibrary
 
-import utils
 class ThingToRank:
     def __init__(self, status):
         self.status = status

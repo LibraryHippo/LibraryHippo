@@ -114,7 +114,7 @@ class LibraryAccount:
         return items
 
     def logout(self):
-        response = self.fetcher(self.logout_url())
+        self.fetcher(self.logout_url())
 
     def get_status(self):
         expires = None

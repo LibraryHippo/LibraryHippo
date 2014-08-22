@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 
 import logging
-import os
 import urllib
 import urlparse
-import uuid
 
 from google.appengine.api import mail
 from google.appengine.api import users
-from google.appengine.ext.webapp import template
-from google.appengine.runtime import DeadlineExceededError
 
 import data
 

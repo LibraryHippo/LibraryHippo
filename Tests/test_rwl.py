@@ -11,7 +11,6 @@ from data import Hold
 #from data import LoginError
 
 from fakes import MyCard
-from fakes import MyLibrary
 from fakes import MyOpener
 
 def test__parse_hold__vanilla_hold__understands_hold():

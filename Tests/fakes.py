@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import StringIO
-
 class MyResponse:
     def __init__(self, content, status_code=200, headers={}, final_url='http://www.google.ca/'):
         self.content = content

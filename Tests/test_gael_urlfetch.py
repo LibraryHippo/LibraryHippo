@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
-import os
-import sys
 from fakes import MyOpener, MyResponse
 
-from gael.urlfetch import *
+from gael.urlfetch import CookieHandler, RedirectFollower, PayloadEncoder, Transcriber
 
 def test__cookiehandler__response_cookies__saved():
     
@@ -52,7 +50,7 @@ def test__redirect_follower__relative_redirect__follows():
         'my content2',
         )
     fetcher = RedirectFollower(wrapped_fetcher)
-    response = fetcher('http://www.google.ca/')
+    fetcher('http://www.google.ca/')
     assert 'http://www.google.ca/images/hippo' == wrapped_fetcher.last_request['url']
 
 

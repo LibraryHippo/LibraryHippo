@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
 import sys
-import urlparse
 import logging
 import datetime
 import re
-from BeautifulSoup import BeautifulSoup, Comment
+from BeautifulSoup import BeautifulSoup
 from data import Hold, Item, LoginError, CardStatus
 import utils.soup
 

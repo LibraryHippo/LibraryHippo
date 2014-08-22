@@ -8,9 +8,9 @@ import pickle
 class ObjectProperty(db.BlobProperty):
     def validate(self, value):
         try:
-            result = pickle.dumps(value)
+            pickle.dumps(value)
             return value
-        except pickle.PicklingError, e:
+        except pickle.PicklingError:
             return super(ObjectProperty, self).validate(value)
 
     def get_value_for_datastore(self, model_instance):
