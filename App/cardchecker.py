@@ -3,20 +3,25 @@ import sys
 import time
 
 from google.appengine.api.urlfetch import DownloadError
-from google.appengine.runtime import DeadlineExceededError
 
 import all_libraries
 import data
 import errors
+import utils.times
+
+clock = utils.times.Clock()
+
 
 def is_transient_error(e):
     result = ((type(e).__name__ == 'DeadlineExceededError') or
               (type(e).__name__ == 'DownloadError') and
                (e.message.strip() == 'ApplicationError: 5' or
                 e.message.strip() == 'ApplicationError: 2'))
-    logging.debug('is_transient_error: testing [%s] [%s]: result = [%s]' % (type(e), e, result))
+    logging.debug('is_transient_error: testing [%s] [%s]: result = [%s]',
+                  type(e), e, result)
 
     return result
+
 
 class CardChecker:
 
@@ -37,7 +42,7 @@ class CardChecker:
 
         except:
             e = data.CardCheckFailed.For(user, library_account.card)
-            logging.info('event = ' +  str(e.__dict__))
+            logging.info('event = ' + str(e.__dict__))
             e.put()
             logging.error('failed to check [%s] at [%s]', library_account.card.name, library_account.library.name, exc_info=True)
 
@@ -58,8 +63,6 @@ class CardChecker:
         try:
             logging.info('saving checked card for ' + card_status.patron_name)
 
-            name = str(card.key())
-
             checked_card_key = data.CheckedCard.all(keys_only=True).filter('card =', card).get()
             if checked_card_key:
                 checked_card = data.CheckedCard(key=checked_card_key)
@@ -72,4 +75,3 @@ class CardChecker:
             checked_card.put()
         except:
             logging.error('Failed to save checked card. Continuing.', exc_info=True)
-
