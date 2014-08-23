@@ -4,6 +4,7 @@
 from google.appengine.ext import db
 import pickle
 
+
 # Use this property to store objects.
 class ObjectProperty(db.BlobProperty):
     def validate(self, value):

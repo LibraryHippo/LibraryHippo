@@ -8,12 +8,12 @@ from BeautifulSoup import BeautifulSoup
 from data import Hold, Item, LoginError, CardStatus
 import utils.soup
 
+
 class LibraryAccount:
     def __init__(self, card, fetcher):
         self.card = card
         self.library = card.library
         self.fetcher = fetcher
-
 
     def base_url(self):
         return 'http://www.regionofwaterloo.canlib.ca'
@@ -109,14 +109,13 @@ class LibraryAccount:
 
         login_url = self.base_url() + login_form[0]['action']
         logging.debug('found login url: ' + login_url)
-       
-        form_fields = {
-          'user_id': self.card.number,
-          'password': self.card.pin,
-          'submit': 'Login'
-          }
 
-        
+        form_fields = {
+            'user_id': self.card.number,
+            'password': self.card.pin,
+            'submit': 'Login'
+        }
+
         login_response = BeautifulSoup(self.fetcher(login_url, form_fields, deadline=10).content)
         my_account_url = login_response.body(text=lambda(x): x.find('My Account') >= 0)
         my_account_url = self.base_url() + my_account_url[0].parent['href']
@@ -127,9 +126,8 @@ class LibraryAccount:
     def load_account_page(self, my_account_url):
         account_response = BeautifulSoup(self.fetcher(my_account_url, deadline=10).content)
 
-        
         info_path_url = account_response.body(text=lambda(x): x.find('Review My Account') >= 0)
-        info_path_url =  info_path_url[0].parent['href']
+        info_path_url = info_path_url[0].parent['href']
         info_path_url = self.base_url() + info_path_url
 
         logging.debug('found info_path_url: ' + info_path_url)
@@ -149,13 +147,12 @@ class LibraryAccount:
 
         return CardStatus(self.card, items, holds)
 
-
     def get_holds(self):
         pass
 
     def get_items(self, page):
         items = []
-        item_due_dates  = page.findAll(text=' Due Date ')
+        item_due_dates = page.findAll(text=' Due Date ')
         if item_due_dates:
             item_rows = [i.parent.parent for i in item_due_dates]
             items = [self.parse_item(row) for row in item_rows]
@@ -168,11 +165,10 @@ class LibraryAccount:
 
 
 def main(args=None):
-    if args == None:
+    if args is None:
         args = sys.argv[1:]
     return 0
 
 
 if __name__ == '__main__':
     sys.exit(main())
-

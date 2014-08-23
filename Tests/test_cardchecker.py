@@ -4,11 +4,12 @@ import pytest
 import gael.testing
 gael.testing.add_appsever_import_paths()
 
-import google.appengine.runtime 			# NOQA
-import google.appengine.runtime.apiproxy_errors	# NOQA
-import google.appengine.api.urlfetch 			# NOQA
+import google.appengine.runtime 		 	# NOQA
+import google.appengine.runtime.apiproxy_errors 	# NOQA
+import google.appengine.api.urlfetch 		 	# NOQA
 
 import cardchecker
+
 
 @pytest.mark.parametrize("error,expected", [
     ("google.appengine.runtime.DeadlineExceededError()", True),

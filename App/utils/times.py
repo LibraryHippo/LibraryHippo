@@ -3,10 +3,10 @@
 import calendar
 import datetime
 
+
 class WaterlooTimeZone(datetime.tzinfo):
 
     """Represents the time zone for Waterloo, Ontario, Canada"""
-
     def utcoffset(self, dt):
         return datetime.timedelta(hours=-5) + self.dst(dt)
 
@@ -36,6 +36,7 @@ class WaterlooTimeZone(datetime.tzinfo):
 
     def tzname(self, dt):
         return 'Canada/Ontario/Waterloo'
+
 
 class Clock(object):
 
