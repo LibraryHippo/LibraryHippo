@@ -9,10 +9,11 @@ from BeautifulSoup import BeautifulSoup
 from data import Hold, Item, LoginError, CardStatus
 import utils.soup
 
-def strip_tags(element): 
-    return ''.join([e for e in element.recursiveChildGenerator() 
-                    if isinstance(e,unicode)])
-   
+
+def strip_tags(element):
+    return ''.join([e for e in element.recursiveChildGenerator()
+                    if isinstance(e, unicode)])
+
 
 def parse_status(status_element):
     rest = []
@@ -26,6 +27,7 @@ def parse_status(status_element):
     rest.extend((('<br/>'.join(utils.soup.text(c)) for c in status_element.contents[1:])))
     return (due,) + tuple(rest)
 
+
 def parse_hold_status(status_element):
     due_text = status_element.contents[0].strip()
     special_statuses = {
@@ -33,7 +35,7 @@ def parse_hold_status(status_element):
         'IN TRANSIT': Hold.IN_TRANSIT,
         'CHECK SHELVES': Hold.CHECK_SHELVES,
         'TRACE': Hold.DELAYED,
-      }
+    }
 
     if due_text in special_statuses:
         return special_statuses[due_text]
@@ -44,9 +46,11 @@ def parse_hold_status(status_element):
     else:
         return due_text
 
+
 def parse_hold_expires(cell):
-    text  = cell.contents[0].strip()
+    text = cell.contents[0].strip()
     return datetime.datetime.strptime(text, '%m-%d-%y').date()
+
 
 def parse_hold_frozen(cell):
     if not cell.input:
@@ -56,6 +60,7 @@ def parse_hold_frozen(cell):
             return True
     return False
 
+
 class LibraryAccount:
     def __init__(self, card, fetcher):
         self.card = card
@@ -63,7 +68,8 @@ class LibraryAccount:
         self.fetcher = fetcher
 
     def login_url(self):
-        return 'https://books.kpl.org/iii/cas/login?service=https://books.kpl.org/patroninfo~S3/j_acegi_cas_security_check&lang=eng&scope=3'
+        return 'https://books.kpl.org/iii/cas/login?service=' + \
+               'https://books.kpl.org/patroninfo~S3/j_acegi_cas_security_check&lang=eng&scope=3'
 
     def logout_url(self):
         return urlparse.urljoin(self.login_url(), '/logout?')
@@ -81,20 +87,20 @@ class LibraryAccount:
                 form_fields['submit'] = input_field['name']
             else:
                 form_fields[input_field['name']] = input_field.get('value', '')
-        
+
         form_fields.update({
-          'name': self.card.name,
-          'code': self.card.number,
-          })
+            'name': self.card.name,
+            'code': self.card.number,
+        })
 
         response = self.fetcher(self.login_url(), form_fields)
-        
+
         response_data = response.content
 
         if 'Sorry, the information you submitted was invalid. Please try again.' in response_data:
-             l = LoginError(patron=self.card.name, library=self.card.library.name)
-             logging.error('login failed: %s', l)
-             raise l            
+            l = LoginError(patron=self.card.name, library=self.card.library.name)
+            logging.error('login failed: %s', l)
+            raise l
 
         return response_data
 
@@ -106,9 +112,11 @@ class LibraryAccount:
         return holds
 
     def get_items(self):
-        if not hasattr(self, 'items_url'): return []
+        if not hasattr(self, 'items_url'):
+            return []
+
         response = self.fetcher(self.items_url)
-        items =  self.parse_items(BeautifulSoup(response.content))
+        items = self.parse_items(BeautifulSoup(response.content))
         for item in items:
             item.items_url = self.items_url
         return items
@@ -130,20 +138,19 @@ class LibraryAccount:
             else:
                 logging.info('no link to holds found')
                 holds = []
-                
+
             items_anchors = souped_response.findAll(name='a', href=re.compile('/items$'))
             if items_anchors:
                 self.items_url = urlparse.urljoin(self.login_url(), items_anchors[0]['href'])
             else:
                 logging.info('no link to items found')
-                                
 
             expires_location = login_response.find('EXP DATE:')
             if expires_location >= 0:
                 expires_location += 9
-                expires_string = login_response[expires_location:expires_location+10]
+                expires_string = login_response[expires_location:expires_location + 10]
                 expires = datetime.datetime.strptime(expires_string, '%m-%d-%Y').date()
-        
+
             items = self.get_items()
 
         finally:
@@ -156,7 +163,6 @@ class LibraryAccount:
         if expires:
             status.expires = expires
         return status
-        
 
     def parse_holds(self, response):
         tableHeader = response.find('tr', attrs={'class': 'patFuncHeaders'})
@@ -183,7 +189,7 @@ class LibraryAccount:
                     # also ensures that we're saving a true string,
                     # not a NaviagableString, which pickles terribly!
                     entry.pickup = str(pickup).strip()
-                        
+
                 elif columnName == 'STATUS':
                     entry.status = parse_hold_status(cell)
 
@@ -238,11 +244,10 @@ class LibraryAccount:
 
 
 def main(args=None):
-    if args == None:
+    if args is None:
         args = sys.argv[1:]
     return 0
 
 
 if __name__ == '__main__':
     sys.exit(main())
-

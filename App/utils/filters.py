@@ -2,11 +2,13 @@
 
 import datetime
 
+
 def duedate(value):
     if isinstance(value, datetime.date):
         return value.strftime('%d').lstrip('0') + value.strftime('&nbsp;%B (%A)')
     else:
         return str(value)
+
 
 def link(value, url):
     if url:
@@ -14,17 +16,21 @@ def link(value, url):
     else:
         return value
 
+
 def pluralize(count):
-    if count == 1: return ''
+    if count == 1:
+        return ''
     return 's'
+
 
 def elapsed(value):
 
     if value.days:
         return str(value.days) + ' day' + pluralize(value.days)
 
-    hours = value.seconds//3600
+    hours = value.seconds // 3600
     return str(hours) + ' hour' + pluralize(hours)
+
 
 def humanize_time(value):
     delta = datetime.datetime.utcnow() - value
@@ -41,6 +47,7 @@ def humanize_time(value):
         return '1 hour ago'
     hours = minutes // 60
     return str(hours) + ' hours ago'
+
 
 def register_all(environment):
     environment.filters['link'] = link

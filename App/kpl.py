@@ -8,7 +8,8 @@ import datetime
 from data import CardStatus, LoginError
 import wpl
 
-class LibraryAccount(wpl.LibraryAccount): 
+
+class LibraryAccount(wpl.LibraryAccount):
     def login_url(self):
         return 'https://books.kpl.org/iii/cas/login?service=https://books.kpl.org:443/patroninfo~S1/IIITICKET&scope=1'
 
@@ -21,7 +22,7 @@ class LibraryAccount(wpl.LibraryAccount):
                 if not redirect:
                     l = LoginError(patron=self.card.name, library=self.card.library.name)
                     logging.error("Login failed. Can't find redirect: %s", l)
-                    raise l            
+                    raise l
 
                 logging.info('redirecting to %s', redirect.group(1))
                 main_page = BeautifulSoup(self.fetcher(redirect.group(1)).content)
@@ -35,7 +36,6 @@ class LibraryAccount(wpl.LibraryAccount):
                 else:
                     logging.info('no link to items found')
 
-
                 if holds_url:
                     holds = self.get_holds(holds_url)
                     logging.info('holds_url = %s', holds_url)
@@ -43,11 +43,10 @@ class LibraryAccount(wpl.LibraryAccount):
                     logging.info('no link to holds found')
                     holds = []
 
-
                 expires_location = login_response.find('EXP DATE:')
                 if expires_location >= 0:
                     expires_location += 9
-                    expires_string = login_response[expires_location:expires_location+10]
+                    expires_string = login_response[expires_location:expires_location + 10]
                     expires = datetime.datetime.strptime(expires_string, '%m-%d-%Y').date()
 
                 items = self.get_items()
@@ -62,4 +61,3 @@ class LibraryAccount(wpl.LibraryAccount):
             if expires:
                 status.expires = expires
             return status
-

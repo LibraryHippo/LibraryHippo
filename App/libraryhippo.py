@@ -21,11 +21,12 @@ from gael.urlfetch import Transcriber, PayloadEncoder, RedirectFollower, CookieH
 
 clock = utils.times.Clock()
 
+
 class MyHandler(webapp2.RequestHandler):
 
     @webapp2.cached_property
     def jinja(self):
-        jinja2.default_config['environment_args']['autoescape'] =False
+        jinja2.default_config['environment_args']['autoescape'] = False
         j = jinja2.get_jinja2(app=self.app)
         utils.filters.register_all(j.environment)
         return j
@@ -54,12 +55,13 @@ class MyHandler(webapp2.RequestHandler):
 
     def add_action_urls(self):
         if users.get_current_user():
-            self.template_values['logout_url'] =  '/logout'
+            self.template_values['logout_url'] = '/logout'
             if users.is_current_user_admin():
                 self.template_values['control_panel_url'] = '/static/controlpanel.html'
 
     def render(self, template_file):
         self.response.out.write(self.jinja.render_template(template_file, **self.template_values))
+
 
 class Account(MyHandler):
     @uses_family
@@ -73,9 +75,10 @@ class Account(MyHandler):
             'libraries': libraries,
             'cards': family and list(family.card_set) or [],
             'principals': family and family.principals or [],
-            })
+        })
 
         self.render('account.html')
+
 
 class SaveCard(MyHandler):
     @uses_family
@@ -83,16 +86,17 @@ class SaveCard(MyHandler):
         if not family:
             self.redirect('/account')
             return
-        
+
         card = data.Card(parent=family,
-                                         family=family,
-                                         number=self.request.get('number'),
-                                         name=self.request.get('name'),
-                                         pin=self.request.get('pin'),
-                                         library = data.Library.get(self.request.get('library_id'))
-                                         )
+                         family=family,
+                         number=self.request.get('number'),
+                         name=self.request.get('name'),
+                         pin=self.request.get('pin'),
+                         library=data.Library.get(self.request.get('library_id'))
+                         )
         card.put()
         self.redirect('/account')
+
 
 class RemoveCard(MyHandler):
     @uses_family
@@ -106,7 +110,8 @@ class RemoveCard(MyHandler):
         else:
             logging.error('request to remove card ' + card.to_xml() + ' from family ' + family.to_xml())
         self.redirect('/account')
-    
+
+
 class ChangePin(MyHandler):
     @uses_family
     def get(self, user, family, card_key, new_pin):
@@ -117,9 +122,11 @@ class ChangePin(MyHandler):
             card.put()
             logging.info('saved card')
         else:
-            logging.error('request to update pin for card card ' + card.to_xml() + ' that belongs to family ' + family.to_xml())
+            logging.error('request to update pin for card %s that belongs to family %s',
+                          card.to_xml(), family.to_xml())
         self.redirect('/account')
-    
+
+
 class RemoveResponsible(MyHandler):
     @uses_family
     def post(self, user, family):
@@ -129,13 +136,13 @@ class RemoveResponsible(MyHandler):
             if principal in family.principals:
                 send_email(principal_email,
                            'LibraryHippo: you are no longer a responsible person for the ' + family.name + ' family',
-                           body=user.email() + ' has removed you from being a responsible person for the ' + family.name + ' family at LibraryHippo ' +
-                           '(http://libraryhippo.com)')
+                           body=user.email() + ' has removed you from being a responsible person for the ' +
+                           family.name + 'family at LibraryHippo (http://libraryhippo.com)')
                 logging.info('removing principal ' + str(principal))
                 family.principals.remove(principal)
                 removed_a_principal = True
             else:
-                logging.error('request to remove principal ' + str(principal) + ' from family ' + family.to_xml())            
+                logging.error('request to remove principal ' + str(principal) + ' from family ' + family.to_xml())
 
         if len(family.principals) == 0:
             logging.info('no more principals - removing family ' + family.to_xml())
@@ -147,7 +154,8 @@ class RemoveResponsible(MyHandler):
                 logging.info('saved family ' + family.to_xml())
 
         self.redirect('/account')
-        
+
+
 class SaveFamily(MyHandler):
     @uses_family
     def post(self, user, family):
@@ -156,7 +164,7 @@ class SaveFamily(MyHandler):
             family = data.Family()
             send_email('librarianhippo@gmail.com',
                        'New family ' + self.request.get('name') + ' registered',
-                       body = ('registered to '  + str(user)))
+                       body=('registered to ' + str(user)))
 
         family.name = self.request.get('name')
         if not family.principals:
@@ -164,6 +172,7 @@ class SaveFamily(MyHandler):
         family.put()
 
         self.redirect('/account')
+
 
 class AddResponsible(MyHandler):
     @uses_family
@@ -185,13 +194,12 @@ class AddResponsible(MyHandler):
             else:
                 send_email(new_principal.email(),
                            'LibraryHippo: you are now a responsible person for the ' + family.name + ' family',
-                           body=user.email() + ' has made you a responsible person for the ' + family.name + ' family.\nLearn more by visiting LibraryHippo' +
-                           ' at http://libraryhippo.com')
+                           body=user.email() + ' has made you a responsible person for the ' + family.name +
+                           ' family.\nLearn more by visiting LibraryHippo at http://libraryhippo.com')
                 family.principals.append(new_principal)
                 family.put()
         else:
             logging.debug(new_principal.email() + ' is already in ' + family.name)
-
 
         self.redirect('/account')
 
@@ -208,7 +216,7 @@ def make_test_summary(family):
     h.add_status_note('note 1')
     h.add_status_note('note 2')
     holds_ready = [h]
-    
+
     template_values = {}
     template_values['holds_ready'] = holds_ready
     template_values['items_due'] = []
@@ -216,6 +224,7 @@ def make_test_summary(family):
     template_values['family'] = family
 
     return template_values
+
 
 def build_template(statuses, family):
     holds = sum((status.holds for status in statuses), [])
@@ -236,7 +245,7 @@ def build_template(statuses, family):
             items_due_soon.append(item)
         else:
             items_due_later.append(item)
-           
+
     hold_expires_cutoff = today + datetime.timedelta(days=30)
     holds_ready = []
     holds_not_ready = []
@@ -263,12 +272,12 @@ def build_template(statuses, family):
 
     if template_values['info'] or template_values['holds_ready'] or template_values['items_due']:
         template_values['should_notify'] = True
-        
+
     expiry_first_warning_date = today + datetime.timedelta(days=7)
     for status in statuses:
         if status.expires <= expiry_first_warning_date:
             logging.debug('card expires within a week')
-            if status.expires == today  or status.expires == expiry_first_warning_date:
+            if status.expires == today or status.expires == expiry_first_warning_date:
                 template_values['should_notify'] = True
 
             if status.expires < today:
@@ -280,18 +289,20 @@ def build_template(statuses, family):
             template_values['info'] += [data.CardInfo(status.library_name, status.patron_name, message)]
 
     return template_values
-        
+
+
 class Summary(MyHandler):
     @uses_family
     def get(self, user, family):
         if not family:
             self.redirect('/account')
             return
-        
+
         self.template_values['cards'] = [card for card in family.card_set]
         self.template_values['family'] = family
-        
+
         self.render('summary.html')
+
 
 class CheckCardBase(MyHandler):
     def check_card(self, user, card):
@@ -305,6 +316,7 @@ class CheckCardBase(MyHandler):
             card_status = e.card_status
 
         return card_status
+
 
 class CheckCard(CheckCardBase):
     @uses_family
@@ -321,13 +333,16 @@ class CheckCard(CheckCardBase):
         self.template_values.update(build_template([card_status], family))
         self.render('ajax_content.html')
 
+
 class Welcome(MyHandler):
     def get(self):
         self.render('welcome.html')
 
+
 class About(MyHandler):
     def get(self):
         self.render('about.html')
+
 
 class AdminNotify(MyHandler):
     def load_summary(self, family, checked_cards):
@@ -342,8 +357,11 @@ class AdminNotify(MyHandler):
                 time_since_check = utils.filters.elapsed(elapsed)
                 logging.error('unable to check card for ' + time_since_check)
                 template['should_notify'] = True
-                template['info'].append(data.CardInfo(c.payload.library_name, c.payload.patron_name, 'Unable to check card for ' + time_since_check + '. <a href="http://libraryhippo.com/about#check_failed">Why?</a>'))
-                    
+                why_link = '<a href="http://libraryhippo.com/about#check_failed">Why?</a>'
+                template['info'].append(data.CardInfo(c.payload.library_name, c.payload.patron_name,
+                                                      'Unable to check card for ' + time_since_check + '. ' +
+                                                      why_link))
+
         return template
 
     def get(self, family_key):
@@ -359,16 +377,17 @@ class AdminNotify(MyHandler):
         if not template_values['should_notify']:
             logging.debug('no reason to notify')
             return
-        
+
         subject = utils.build_notification_subject(template_values['info'],
                                                    template_values['items_due'],
-                                                   template_values['holds_ready']) 
-        
+                                                   template_values['holds_ready'])
+
         if subject:
             send_email([a.email() for a in family.principals],
                        subject,
                        bcc=template_values['error'] and 'librarianhippo@gmail.com',
-                       html = self.jinja.render_template('email.html', **template_values))
+                       html=self.jinja.render_template('email.html', **template_values))
+
 
 class AdminNotifyTest(MyHandler):
     def get(self, family_key):
@@ -379,7 +398,8 @@ class AdminNotifyTest(MyHandler):
 
         send_email([a.email() for a in for_family.principals],
                    'LibraryHippo status for ' + for_family.name + ' Family',
-                   html = self.jinja.render_template('email.html', **template_values))
+                   html=self.jinja.render_template('email.html', **template_values))
+
 
 class CheckAllCards(MyHandler):
     def get(self):
@@ -390,10 +410,12 @@ class CheckAllCards(MyHandler):
         logging.info('done')
         self.response.out.write('done')
 
+
 class AdminCheckCard(CheckCardBase):
     def get(self, card_key):
         card = data.Card.get(card_key)
         self.check_card(user=users.get_current_user(), card=card)
+
 
 class ListFamilies(MyHandler):
     def get(self):
@@ -401,6 +423,7 @@ class ListFamilies(MyHandler):
         logging.debug(families)
         self.template_values.update({'families': families})
         self.render('families.html')
+
 
 class Impersonate(MyHandler):
     def get(self, username):
@@ -410,6 +433,7 @@ class Impersonate(MyHandler):
         self.render('impersonate.html')
         return
 
+
 class ViewCheckedCards(MyHandler):
     def get(self, family_key):
         family = data.Family.get(family_key)
@@ -418,35 +442,39 @@ class ViewCheckedCards(MyHandler):
 
         checked_cards = data.CheckedCard.all().filter('card IN ', list(family.card_set)).fetch(1000)
         statuses = [cc.payload for cc in checked_cards]
-            
+
         logging.debug('found ' + str(len(statuses)) + ' statuses')
         self.template_values = build_template(statuses, family)
         self.render('static_summary.html')
-            
+
+
 class AuditLog(MyHandler):
     def get(self, page='1'):
-        page = int(page,10)
+        page = int(page, 10)
         now = clock.utcnow()
         events = []
         for e in data.Event.all() \
                 .filter('date_time_saved >', now - datetime.timedelta(days=page)) \
-                .filter('date_time_saved <', now - datetime.timedelta(days=page-1)) \
+                .filter('date_time_saved <', now - datetime.timedelta(days=page - 1)) \
                 .order('-date_time_saved'):
             logging.debug('Event user = ' + str(e.user))
             events.append(e)
-            
-        self.template_values = {'events': events, 'previouspage': page-1, 'nextpage': page+1 }
+
+        self.template_values = {'events': events, 'previouspage': page - 1, 'nextpage': page + 1}
         self.render('auditlog.html')
+
 
 def remove_user_cookie(response):
         response.headers.add_header('Set-Cookie',
                                     'user=nouser; path=/; expires=Sun, 4-Apr-2010 23:59:59 GMT')
+
 
 class StopImpersonating(MyHandler):
     def get(self):
         remove_user_cookie(self.response)
         self.redirect('/')
         return
+
 
 class NotifyAll(MyHandler):
     def get(self):
@@ -455,17 +483,18 @@ class NotifyAll(MyHandler):
             logging.info('queuing ' + family.name)
             taskqueue.add(
                 url='/admin/notify/' + str(family.key()),
-                method='GET',
-                )
+                method='GET')
+
         logging.info('done')
         self.response.out.write('done')
+
 
 class MigrateLibraries(MyHandler):
     def get(self):
         wpl = data.Library(
             key_name='wpl',
             type='wpl',
-            name= 'Waterloo')
+            name='Waterloo')
 
         wpl.put()
 
@@ -475,8 +504,9 @@ class MigrateLibraries(MyHandler):
             name='Kitchener')
 
         kpl.put()
-        
+
         self.redirect('/account')
+
 
 class MigrateCards(MyHandler):
     def get(self):
@@ -495,6 +525,7 @@ class MigrateCards(MyHandler):
 
         self.redirect('/account')
 
+
 class MigrateUserToPrincipal(MyHandler):
     def get(self):
         families = data.Family.all().fetch(1000)
@@ -508,10 +539,12 @@ class MigrateUserToPrincipal(MyHandler):
 
         self.redirect('/account')
 
+
 class NotFound(MyHandler):
     def get(self):
         self.render('notfound.html')
         self.response.set_status(404)
+
 
 class PopulateData(MyHandler):
     def get(self):
@@ -523,7 +556,7 @@ class PopulateData(MyHandler):
             ('Waterloo Public Library', 'wpl'),
             ('Kitchener Public Library', 'kpl'),
             ('Region of Waterloo Library', 'rwl'),
-            ):
+        ):
             lib = libraries.setdefault(l[0], data.Library())
             lib.name = l[0]
             lib.type = l[1]
@@ -532,28 +565,31 @@ class PopulateData(MyHandler):
 
         self.response.out.write('done')
 
+
 class Logout(MyHandler):
     def get(self):
         remove_user_cookie(self.response)
         self.redirect(users.create_logout_url('/'))
 
+
 class TryLogin(webapp2.RequestHandler):
     def get(self):
         providers = {
-            'Google'   : 'www.google.com/accounts/o8/id',
-            'MyOpenID' : 'myopenid.com',
-            'Blair Conrad\'s MyOpenID' : 'blair.conrad.myopenid.com',
-            'Blair Conrad\'s Wordpress' : 'blairconrad.wordpress.com',
-            'Yahoo' : 'yahoo.com',
+            'Google': 'www.google.com/accounts/o8/id',
+            'MyOpenID': 'myopenid.com',
+            'Blair Conrad\'s MyOpenID': 'blair.conrad.myopenid.com',
+            'Blair Conrad\'s Wordpress': 'blairconrad.wordpress.com',
+            'Yahoo': 'yahoo.com',
             'StackExchange': 'openid.stackexchange.com',
-            }
-        
+        }
+
         user = users.get_current_user()
         if user:  # signed in already
 
             logging.debug('nickname: %s, email: %s, user_id: %s, federated_identity: %s, federated_provider: %s',
-                          user.nickname(), user.email(), user.user_id(), user.federated_identity(), user.federated_provider())
-            
+                          user.nickname(), user.email(), user.user_id(),
+                          user.federated_identity(), user.federated_provider())
+
             self.response.out.write('Hello <em>%s</em>! [<a href="%s">sign out</a>]' % (
                 user.nickname(), users.create_logout_url(self.request.uri)))
 
@@ -561,15 +597,16 @@ class TryLogin(webapp2.RequestHandler):
             self.response.out.write('Hello world! Sign in at: ')
             for name, uri in providers.items():
                 self.response.out.write('[<a href="%s">%s</a>]' % (
-                    users.create_login_url(dest_url= '/trylogin', federated_identity=uri), name))
+                    users.create_login_url(dest_url='/trylogin', federated_identity=uri), name))
+
 
 class OpenIdLoginHandler(MyHandler):
     def get(self):
         continue_url = self.request.GET.get('continue')
         login_url = users.create_login_url(dest_url=continue_url)
         logging.debug('OpenIdLoginHandler: redirecting to %s', login_url)
-        
-        self.redirect(login_url)        
+
+        self.redirect(login_url)
 
 logging.getLogger().setLevel(logging.DEBUG)
 logging.info('running main')
@@ -589,7 +626,7 @@ handlers = [
     ('/admin/auditlog$', AuditLog),
     ('/admin/auditlog/(.*)$', AuditLog),
     ('/$', Welcome),
-    ]
+]
 
 for c in (About, Summary, Account, SaveFamily, AddResponsible, SaveCard, RemoveResponsible, Logout):
     handlers.append(('/' + c.__name__.lower() + '$', c))

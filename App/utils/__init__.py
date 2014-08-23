@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
+
 def pluralize(items):
-    if len(items) ==  1:
+    if len(items) == 1:
         return ''
     else:
         return 's'
+
 
 def build_notification_subject(info, items_due, holds_ready):
     subject_events = []
@@ -15,6 +17,3 @@ def build_notification_subject(info, items_due, holds_ready):
     if holds_ready:
         subject_events.append(str(len(holds_ready)) + ' Hold' + pluralize(holds_ready) + ' Ready')
     return ' and '.join(subject_events)
-
-    
-

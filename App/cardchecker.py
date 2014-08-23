@@ -15,8 +15,8 @@ clock = utils.times.Clock()
 def is_transient_error(e):
     result = ((type(e).__name__ == 'DeadlineExceededError') or
               (type(e).__name__ == 'DownloadError') and
-               (e.message.strip() == 'ApplicationError: 5' or
-                e.message.strip() == 'ApplicationError: 2'))
+              (e.message.strip() == 'ApplicationError: 5' or
+               e.message.strip() == 'ApplicationError: 2'))
     logging.debug('is_transient_error: testing [%s] [%s]: result = [%s]',
                   type(e), e, result)
 
@@ -44,7 +44,8 @@ class CardChecker:
             e = data.CardCheckFailed.For(user, library_account.card)
             logging.info('event = ' + str(e.__dict__))
             e.put()
-            logging.error('failed to check [%s] at [%s]', library_account.card.name, library_account.library.name, exc_info=True)
+            logging.error('failed to check [%s] at [%s]',
+                          library_account.card.name, library_account.library.name, exc_info=True)
 
             card_status = data.CardStatus(library_account.card)
             card_status.add_failure()
