@@ -19,5 +19,5 @@ import cardchecker
     ("google.appengine.api.urlfetch.DownloadError('ApplicationError: 2')", True),
     ("google.appengine.api.urlfetch.DownloadError('ApplicationError: 3')", False),
 ])
-def test_eval(error, expected):
+def test__is_transient_error__various_input__correct_result(error, expected):
     assert cardchecker.is_transient_error(eval(error)) == expected

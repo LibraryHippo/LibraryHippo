@@ -20,17 +20,17 @@ class WaterlooTimeZone(datetime.tzinfo):
         month = calendar.monthcalendar(dt.year, dt.month)
         if 3 == dt.month:
             if month[0][dt.weekday()] == 0:
-                secondSunday = month[2][dt.weekday()]
+                second_sunday = month[2][dt.weekday()]
             else:
-                secondSunday = month[1][dt.weekday()]
-            if dt.day > secondSunday or (dt.day == secondSunday and dt.hour >= 2):
+                second_sunday = month[1][dt.weekday()]
+            if dt.day > second_sunday or (dt.day == second_sunday and dt.hour >= 2):
                 return datetime.timedelta(hours=1)
         elif 11 == dt.month:
             if month[0][dt.weekday()] == 0:
-                firstSunday = month[1][dt.weekday()]
+                first_sunday = month[1][dt.weekday()]
             else:
-                firstSunday = month[0][dt.weekday()]
-            if dt.day < firstSunday or (dt.day == firstSunday and dt.hour < 2):
+                first_sunday = month[0][dt.weekday()]
+            if dt.day < first_sunday or (dt.day == first_sunday and dt.hour < 2):
                 return datetime.timedelta(hours=1)
         return datetime.timedelta(0)
 

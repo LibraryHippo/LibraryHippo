@@ -41,7 +41,7 @@ class CardChecker:
             self.save_checked_card(library_account.card, card_status)
 
         except:
-            e = data.CardCheckFailed.For(user, library_account.card)
+            e = data.CardCheckFailed.for_card(library_account.card, user=user)
             logging.info('event = ' + str(e.__dict__))
             e.put()
             logging.error('failed to check [%s] at [%s]',
