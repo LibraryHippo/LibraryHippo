@@ -1,3 +1,3 @@
 @ECHO OFF
 
-flake8 --exclude BeautifulSoup.py --max-line-length=120 .
+python tests\test_python_syntax.py
