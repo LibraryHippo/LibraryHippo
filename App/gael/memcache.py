@@ -13,7 +13,7 @@ def memoize(key, seconds_to_keep=600):
     key_func(*args, **kwargs), where *args and **kwargs are the
     arguments to the decorated function.
     '''
-    class memoize():
+    class Memoize:
         def __init__(self, func):
             self.key = key
             self.seconds_to_keep = 600
@@ -36,4 +36,4 @@ def memoize(key, seconds_to_keep=600):
             self.cache.set(key_value, result, self.seconds_to_keep)
             return result
 
-    return memoize
+    return Memoize

@@ -52,10 +52,10 @@ class CookieHandler(BaseWrapper):
         return response
 
     def _make_cookie_header(self):
-        cookieHeader = ""
+        cookie_header = ""
         for value in self.cookie_jar.values():
-            cookieHeader += "%s=%s; " % (value.key, value.value)
-        return cookieHeader
+            cookie_header += "%s=%s; " % (value.key, value.value)
+        return cookie_header
 
 
 class RedirectFollower(BaseWrapper):

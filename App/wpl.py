@@ -165,21 +165,21 @@ class LibraryAccount:
         return status
 
     def parse_holds(self, response):
-        tableHeader = response.find('tr', attrs={'class': 'patFuncHeaders'})
-        if not tableHeader:
+        table_header = response.find('tr', attrs={'class': 'patFuncHeaders'})
+        if not table_header:
             return []
-        headers = [th.string.strip() for th in tableHeader('th')]
+        headers = [th.string.strip() for th in table_header('th')]
 
         entries = []
-        for row in tableHeader.findNextSiblings('tr'):
+        for row in table_header.findNextSiblings('tr'):
             entry = Hold(self.library, self.card)
             i = 0
             for cell in row('td'):
-                columnName = headers[i]
+                column_name = headers[i]
 
-                if columnName == 'TITLE':
+                if column_name == 'TITLE':
                     self.parse_title(cell, entry)
-                elif columnName == 'PICKUP LOCATION':
+                elif column_name == 'PICKUP LOCATION':
                     if cell.select:
                         pickup = cell.select.findAll('option', selected='selected')[0].string
                     else:
@@ -190,17 +190,17 @@ class LibraryAccount:
                     # not a NaviagableString, which pickles terribly!
                     entry.pickup = str(pickup).strip()
 
-                elif columnName == 'STATUS':
+                elif column_name == 'STATUS':
                     entry.status = parse_hold_status(cell)
 
-                elif columnName == 'CANCEL IF NOT FILLED BY':
+                elif column_name == 'CANCEL IF NOT FILLED BY':
                     try:
                         entry.expires = parse_hold_expires(cell)
                     except:
                         # expiration info isn't critical - ignore
                         pass
 
-                elif columnName == 'FREEZE':
+                elif column_name == 'FREEZE':
                     try:
                         if parse_hold_frozen(cell):
                             entry.add_status_note('frozen')
@@ -220,21 +220,21 @@ class LibraryAccount:
         thing.url = self.item_url(cell.a['href'])
 
     def parse_items(self, items):
-        tableHeader = items.find('tr', attrs={'class': 'patFuncHeaders'})
-        if not tableHeader:
+        table_header = items.find('tr', attrs={'class': 'patFuncHeaders'})
+        if not table_header:
             return []
-        headers = [th.string.strip() for th in tableHeader('th')]
+        headers = [th.string.strip() for th in table_header('th')]
 
         entries = []
-        for row in tableHeader.findNextSiblings('tr'):
+        for row in table_header.findNextSiblings('tr'):
             entry = Item(self.library, self.card)
             i = 0
             for cell in row('td'):
-                columnName = headers[i]
-                if columnName == 'TITLE':
+                column_name = headers[i]
+                if column_name == 'TITLE':
                     self.parse_title(cell, entry)
 
-                elif columnName == 'STATUS':
+                elif column_name == 'STATUS':
                     status = parse_status(cell)
                     entry.status = status[0]
                     entry.add_status_note((' '.join(status[1:])).strip())

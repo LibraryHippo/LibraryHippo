@@ -146,7 +146,7 @@ class CardCheckFailed(Event):
     card_key = db.ReferenceProperty(Card)
 
     @classmethod
-    def For(cls, user, card):
+    def for_card(cls, card, user):
         e = CardCheckFailed()
         e.set_exception()
         e.user = user
