@@ -10,12 +10,15 @@ from google.appengine.ext.db import polymodel
 
 
 class LoginError(Exception):
-    def __init__(self, patron, library):
+    def __init__(self, patron, library, message=""):
         self.patron = patron
         self.library = library
 
     def __str__(self):
-        return "LoginError('%(patron)s', '%(library)s')" % self.__dict__
+        if self.message:
+            return "LoginError('%(patron)s', '%(library)s: %(message)s')" % self.__dict__
+        else:
+            return "LoginError('%(patron)s', '%(library)s')" % self.__dict__
 
 
 class Thing():

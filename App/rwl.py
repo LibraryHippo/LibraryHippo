@@ -4,8 +4,9 @@ import sys
 import logging
 import datetime
 import re
+import urlparse
 from BeautifulSoup import BeautifulSoup
-from data import Hold, Item, LoginError, CardStatus
+from data import Hold, Item, LoginError, CardInfo, CardStatus
 import utils.soup
 
 
@@ -16,10 +17,7 @@ class LibraryAccount:
         self.fetcher = fetcher
 
     def base_url(self):
-        return 'http://www.regionofwaterloo.canlib.ca'
-
-    def login_url(self):
-        return self.base_url() + '/uhtbin/cgisirsi/x/0/0/49?user_id=WEBSERVER&password='
+        return 'http://www.rwlibrary.ca'
 
     def get_date_from_element(self, element):
         utils.soup.remove_comments(element)
@@ -100,38 +98,60 @@ class LibraryAccount:
         return entry
 
     def login(self):
-        login_response = self.fetcher(self.login_url(), deadline=10)
-        login_content = login_response.content
-        login_page = BeautifulSoup(login_content)
-        login_form = login_page.body('form', attrs={'name': 'loginform'})
+        home_page_url = self.base_url() + '/en'
+        logging.info('fetching home page from %s', home_page_url)
+        home_page_content = self.fetcher(home_page_url, deadline=10).content
+        home_page = BeautifulSoup(home_page_content)
+
+        login_url = None
+        for link in home_page.body('a'):
+            if link.string == 'Log in':
+                login_url = link['href']
+                break
+
+        if not login_url:
+            self.raise_login_error("can't find login url on home page")
+
+        logging.info('fetching login page from %s', login_url)
+        login_page_content = self.fetcher(login_url, deadline=10).content
+        login_page = BeautifulSoup(login_page_content)
+
+        login_form = login_page.body('form', attrs={'id': 'loginPageForm'})[0]
+
         if not login_form:
-            raise LoginError(patron=self.card.name, library=self.card.library.name)
+            self.raise_login_error("can't find login form on home page")
 
-        login_url = self.base_url() + login_form[0]['action']
-        logging.debug('found login url: ' + login_url)
+        form_fields = {}
 
-        form_fields = {
-            'user_id': self.card.number,
-            'password': self.card.pin,
-            'submit': 'Login'
-        }
+        for input_field in login_page.findAll(name='input'):
+            if input_field['type'] == 'submit':
+                form_fields['submit'] = input_field['name']
+            else:
+                form_fields[input_field['name']] = input_field.get('value', '')
 
-        login_response = BeautifulSoup(self.fetcher(login_url, form_fields, deadline=10).content)
-        my_account_url = login_response.body(text=lambda(x): x.find('My Account') >= 0)
-        my_account_url = self.base_url() + my_account_url[0].parent['href']
+        form_fields.update({
+            'j_username': self.card.number,
+            'j_password': self.card.pin,
+        })
 
-        logging.debug('found account_response url: ' + my_account_url)
-        return my_account_url
+        submit_login_url = urlparse.urljoin(login_url, login_form['action'])
+        logging.info('submitting login information to %s', submit_login_url)
 
-    def load_account_page(self, my_account_url):
-        account_response = BeautifulSoup(self.fetcher(my_account_url, deadline=10).content)
+        login_response = self.fetcher(submit_login_url, form_fields)
+        login_response_content = login_response.content
 
-        info_path_url = account_response.body(text=lambda(x): x.find('Review My Account') >= 0)
-        info_path_url = info_path_url[0].parent['href']
-        info_path_url = self.base_url() + info_path_url
+        redirect_to_url = re.search("RedirectAfterLogin\('([^']+)'\)", login_response_content)
+        if not redirect_to_url:
+            self.raise_login_error("Can't find redirect. Login failed.")
 
-        logging.debug('found info_path_url: ' + info_path_url)
-        return info_path_url
+        logging.info('redirecting to %s', redirect_to_url.group(1))
+        return redirect_to_url.group(1)
+
+    def raise_login_error(self, message):
+        raise LoginError(
+            patron=self.card.name,
+            library=self.card.library.name,
+            message=message)
 
     def load_info_page(self, info_path_url):
         info_page_response = BeautifulSoup(self.fetcher(info_path_url, deadline=10).content)
@@ -147,9 +167,6 @@ class LibraryAccount:
 
         return CardStatus(self.card, items, holds)
 
-    def get_holds(self):
-        pass
-
     def get_items(self, page):
         items = []
         item_due_dates = page.findAll(text=' Due Date ')
@@ -160,8 +177,10 @@ class LibraryAccount:
 
     def get_status(self):
         my_account_url = self.login()
-        info_path_url = self.load_account_page(my_account_url)
-        return self.load_info_page(info_path_url)
+        status = self.load_info_page(my_account_url)
+        status.info.append(CardInfo(self.card.library.name, self.card.name,
+                                    "RWL card-checking is temporarily unavailable. We're working on it."))
+        return status
 
 
 def main(args=None):
