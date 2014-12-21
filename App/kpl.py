@@ -20,9 +20,8 @@ class LibraryAccount(wpl.LibraryAccount):
 
                 redirect = re.search('window\\.location="([^"]+)"', login_response)
                 if not redirect:
-                    l = LoginError(patron=self.card.name, library=self.card.library.name)
-                    logging.error("Login failed. Can't find redirect: %s", l)
-                    raise l
+                    raise LoginError(patron=self.card.name, library=self.card.library.name,
+                                     message="Can't find redirect.")
 
                 logging.info('redirecting to %s', redirect.group(1))
                 main_page = BeautifulSoup(self.fetcher(redirect.group(1)).content)

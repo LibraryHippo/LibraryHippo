@@ -98,9 +98,7 @@ class LibraryAccount:
         response_data = response.content
 
         if 'Sorry, the information you submitted was invalid. Please try again.' in response_data:
-            l = LoginError(patron=self.card.name, library=self.card.library.name)
-            logging.error('login failed: %s', l)
-            raise l
+            raise LoginError(patron=self.card.name, library=self.card.library.name, message="Bad credentials.")
 
         return response_data
 
