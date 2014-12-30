@@ -1,5 +1,6 @@
 import logging
 import uuid
+import urlparse
 
 from google.appengine.api import users
 from google.appengine.api import urlfetch
@@ -7,17 +8,28 @@ from google.appengine.api import taskqueue
 from google.appengine.ext import db
 import webapp2
 from webapp2_extras import jinja2
+from webapp2_extras import sessions
 
 import datetime
 from cardchecker import CardChecker
 import errors
 
 import data
-from app_engine_util import uses_family, send_email
+from app_engine_util import send_email
 import utils
 import utils.times
 import utils.filters
 from gael.urlfetch import Transcriber, PayloadEncoder, RedirectFollower, CookieHandler
+
+from authomatic import Authomatic
+from authomatic.adapters import Webapp2Adapter
+import config
+
+authomatic = Authomatic(
+    config=config.authomatic_config,
+    secret='secret',
+    report_errors=True,
+    logging_level=logging.DEBUG)
 
 clock = utils.times.Clock()
 
@@ -30,11 +42,6 @@ class MyHandler(webapp2.RequestHandler):
         j = jinja2.get_jinja2(app=self.app)
         utils.filters.register_all(j.environment)
         return j
-
-    def __init__(self, request, response):
-        webapp2.RequestHandler.__init__(self, request, response)
-        self.template_values = {}
-        self.add_action_urls()
 
     def handle_exception(self, exception, debug_mode):
         error_uid = uuid.uuid4()
@@ -53,20 +60,111 @@ class MyHandler(webapp2.RequestHandler):
         self.render('error.html')
         self.response.set_status(500)
 
-    def add_action_urls(self):
-        if users.get_current_user():
-            self.template_values['logout_url'] = '/logout'
-            if users.is_current_user_admin():
-                self.template_values['control_panel_url'] = '/static/controlpanel.html'
-
     def render(self, template_file):
         self.response.out.write(self.jinja.render_template(template_file, **self.template_values))
 
+    def dispatch(self):
+        self.template_values = {}
+
+        # Get a session store for this request.
+        self.session_store = sessions.get_store(request=self.request)
+
+        try:
+            # Dispatch the request.
+            webapp2.RequestHandler.dispatch(self)
+        finally:
+            # Save all sessions.
+            self.session_store.save_sessions(self.response)
+
+    @webapp2.cached_property
+    def session(self):
+        # Returns a session using the default cookie key.
+        return self.session_store.get_session()
+
+    def get_family(self):
+        user_email = self.session.get('user_email')
+        impersonating_user_email = self.session.get('impersonating_user_email')
+
+        logging.debug('user_email = %s', user_email)
+        logging.debug('impersonating_user_email = %s', impersonating_user_email)
+
+        if not user_email:
+            self.session['next_url'] = self.request.url
+            self.redirect('/oauth2/google')
+            return (None, None)
+
+        if impersonating_user_email is not None:
+            self.template_values['stop_impersonating_url'] = '/admin/stopimpersonating'
+            user_email = impersonating_user_email
+
+        user = users.User(user_email)
+        family = None
+        for f in data.Family.all():
+            for p in f.principals:
+                principal_email = p.email()
+                if principal_email == user.email():
+                    user = p
+                    family = f
+                    break
+
+        self.template_values['logout_url'] = '/logout'
+        if self.is_current_user_admin():
+            self.template_values['control_panel_url'] = '/static/controlpanel.html'
+
+        logging.info('user = [%s] and family = [%s]', user, family)
+
+        return (user, family)
+
+    def is_current_user_admin(self):
+        path = urlparse.urlsplit(self.request.url).path
+        if path.startswith('/system/'):
+            logging.debug('is_current_user_admin: assuming true because [%s] is a system URL', self.request.url)
+            return True
+
+        user_email = self.session.get('user_email')
+        if user_email == 'blair.conrad@gmail.com':
+            logging.debug('is_current_user_admin: returning true because [%s] is an admin', user_email)
+            return True
+        else:
+            logging.debug('is_current_user_admin: returning false because [%s] is not an admin', user_email)
+            return
+
+    def is_logged_in(self):
+        return self.session.get('user_email') is not None
+
+    def assert_current_user_admin(self):
+        if not self.is_current_user_admin():
+            raise(Exception("You aren't an admin"))
+
+
+class OAuth2(MyHandler):
+    def get(self, provider_name):
+
+        result = authomatic.login(Webapp2Adapter(self), provider_name)
+
+        if result:
+            if result.error:
+                error_message = result.error.message
+                raise(Exception('Login failed to [%s]. Error was [%s].' % (provider_name, error_message)))
+            elif result.user:
+                if not (result.user.name and result.user.id):
+                    logging.debug('No name or id. Getting.')
+                    result.user.update()
+                logging.info('user = [%s, %s, %s]', result.user.name, result.user.id, result.user.email)
+                self.session['user_email'] = result.user.email
+                next_url = self.session.get('next_url') or '/'
+                logging.debug('redirecting to %s', next_url)
+                return self.redirect(str(next_url))
+            else:
+                raise(Exception('Login to [%(provider_name)s] succeeded, but no user was returned.' % vars()))
+
 
 class Account(MyHandler):
-    @uses_family
-    def get(self, user, family):
-        logging.debug('family = ' + str(family))
+
+    def get(self):
+        (user, family) = self.get_family()
+        if user is None:
+            return
 
         libraries = data.Library.all()
 
@@ -81,8 +179,8 @@ class Account(MyHandler):
 
 
 class SaveCard(MyHandler):
-    @uses_family
-    def post(self, user, family):
+    def post(self):
+        (user, family) = self.get_family()
         if not family:
             self.redirect('/account')
             return
@@ -99,37 +197,37 @@ class SaveCard(MyHandler):
 
 
 class RemoveCard(MyHandler):
-    @uses_family
-    def get(self, user, family, card_key):
+    def get(self, card_key):
+        (user, family) = self.get_family()
         card = data.Card.get(card_key)
         if card.family.key() == family.key():
-            logging.info('removing card ' + card.to_xml())
+            logging.info('removing card %s', card.to_xml())
             card.delete()
             family.put()
-            logging.info('saved family ' + family.to_xml())
+            logging.info('saved family %s', family.to_xml())
         else:
-            logging.error('request to remove card ' + card.to_xml() + ' from family ' + family.to_xml())
+            logging.error('request to remove card %s from family %s failed', card.to_xml(), family.to_xml())
         self.redirect('/account')
 
 
 class ChangePin(MyHandler):
-    @uses_family
-    def get(self, user, family, card_key, new_pin):
+    def get(self, card_key, new_pin):
+        (user, family) = self.get_family()
         card = data.Card.get(card_key)
         if card.family.key() == family.key():
-            logging.info('updating pin for card ' + card.to_xml())
+            logging.info('updating pin for card %s', card.to_xml())
             card.pin = new_pin
             card.put()
             logging.info('saved card')
         else:
-            logging.error('request to update pin for card %s that belongs to family %s',
+            logging.error('request to update pin for card %s that belongs to family %s failed',
                           card.to_xml(), family.to_xml())
         self.redirect('/account')
 
 
 class RemoveResponsible(MyHandler):
-    @uses_family
-    def post(self, user, family):
+    def post(self):
+        (user, family) = self.get_family()
         removed_a_principal = False
         for principal_email in self.request.arguments():
             principal = users.User(principal_email)
@@ -138,28 +236,27 @@ class RemoveResponsible(MyHandler):
                            'LibraryHippo: you are no longer a responsible person for the ' + family.name + ' family',
                            body=user.email() + ' has removed you from being a responsible person for the ' +
                            family.name + 'family at LibraryHippo (http://libraryhippo.com)')
-                logging.info('removing principal ' + str(principal))
+                logging.info('removing principal %s ', principal)
                 family.principals.remove(principal)
                 removed_a_principal = True
             else:
-                logging.error('request to remove principal ' + str(principal) + ' from family ' + family.to_xml())
+                logging.error('request to remove principal %s from family %s failed', principal, family.to_xml())
 
         if len(family.principals) == 0:
-            logging.info('no more principals - removing family ' + family.to_xml())
+            logging.info('no more principals - removing family %s', family.to_xml())
             cards = [c for c in family.card_set]
             db.delete(cards + [family])
         else:
             if removed_a_principal:
                 family.put()
-                logging.info('saved family ' + family.to_xml())
+                logging.info('saved family %s', family.to_xml())
 
         self.redirect('/account')
 
 
 class SaveFamily(MyHandler):
-    @uses_family
-    def post(self, user, family):
-
+    def post(self):
+        (user, family) = self.get_family()
         if not family:
             family = data.Family()
             send_email('librarianhippo@gmail.com',
@@ -175,8 +272,8 @@ class SaveFamily(MyHandler):
 
 
 class AddResponsible(MyHandler):
-    @uses_family
-    def post(self, user, family):
+    def post(self):
+        (user, family) = self.get_family()
         if not family:
             self.redirect('/account')
 
@@ -184,7 +281,7 @@ class AddResponsible(MyHandler):
 
         if new_principal not in family.principals:
             if data.Family.all().filter('principals = ', new_principal).count():
-                logging.info(new_principal.email() + ' is a member of a different family')
+                logging.info('%s is a member of a different family', new_principal.email())
                 self.template_values.update({
                     'title': 'User Belongs to Another Family',
                     'message': new_principal.email() + ' is already responsible for another family',
@@ -292,8 +389,10 @@ def build_template(statuses, family):
 
 
 class Summary(MyHandler):
-    @uses_family
-    def get(self, user, family):
+    def get(self):
+        (user, family) = self.get_family()
+        if not user:
+            return
         if not family:
             self.redirect('/account')
             return
@@ -319,8 +418,8 @@ class CheckCardBase(MyHandler):
 
 
 class CheckCard(CheckCardBase):
-    @uses_family
-    def get(self, user, family, card_key):
+    def get(self, card_key):
+        (user, family) = self.get_family()
         logging.info('CheckCard called ' + card_key)
         card = data.Card.get(card_key)
         if family.key() != card.family.key():
@@ -365,6 +464,7 @@ class AdminNotify(MyHandler):
         return template
 
     def get(self, family_key):
+        self.assert_current_user_admin()
         family = data.Family.get(family_key)
         if not family:
             raise Exception('no family')
@@ -391,6 +491,7 @@ class AdminNotify(MyHandler):
 
 class AdminNotifyTest(MyHandler):
     def get(self, family_key):
+        self.assert_current_user_admin()
         for_family = data.Family.get(family_key)
         if not for_family:
             raise Exception('no family')
@@ -403,22 +504,27 @@ class AdminNotifyTest(MyHandler):
 
 class CheckAllCards(MyHandler):
     def get(self):
+        self.assert_current_user_admin()
+
         cards = data.Card.all().fetch(1000)
-        tasks = [taskqueue.Task(url='/admin/checkcard/' + str(card.key()), method='GET') for card in cards]
+        tasks = [taskqueue.Task(url='/system/checkcard/' + str(card.key()), method='GET') for card in cards]
         q = taskqueue.Queue()
         q.add(tasks)
-        logging.info('done')
-        self.response.out.write('done')
+        message = 'finished queuing tasks to check %d cards' % (len(tasks),)
+        logging.info(message)
+        self.response.out.write(message)
 
 
 class AdminCheckCard(CheckCardBase):
     def get(self, card_key):
+        self.assert_current_user_admin()
         card = data.Card.get(card_key)
         self.check_card(user=users.get_current_user(), card=card)
 
 
 class ListFamilies(MyHandler):
     def get(self):
+        self.assert_current_user_admin()
         families = data.Family.all().fetch(1000)
         logging.debug(families)
         self.template_values.update({'families': families})
@@ -427,8 +533,9 @@ class ListFamilies(MyHandler):
 
 class Impersonate(MyHandler):
     def get(self, username):
-        self.response.headers.add_header(
-            'Set-Cookie', 'user=%s; path=/' % username)
+        self.assert_current_user_admin()
+        self.session['impersonating_user_email'] = username
+
         self.template_values.update({'user': username})
         self.render('impersonate.html')
         return
@@ -436,6 +543,7 @@ class Impersonate(MyHandler):
 
 class ViewCheckedCards(MyHandler):
     def get(self, family_key):
+        self.assert_current_user_admin()
         family = data.Family.get(family_key)
         if not family:
             raise Exception('no family')
@@ -450,6 +558,7 @@ class ViewCheckedCards(MyHandler):
 
 class AuditLog(MyHandler):
     def get(self, page='1'):
+        self.assert_current_user_admin()
         page = int(page, 10)
         now = clock.utcnow()
         events = []
@@ -464,80 +573,29 @@ class AuditLog(MyHandler):
         self.render('auditlog.html')
 
 
-def remove_user_cookie(response):
-        response.headers.add_header('Set-Cookie',
-                                    'user=nouser; path=/; expires=Sun, 4-Apr-2010 23:59:59 GMT')
-
-
 class StopImpersonating(MyHandler):
     def get(self):
-        remove_user_cookie(self.response)
+        self.assert_current_user_admin()
+        self.session['impersonating_user_email'] = None
         self.redirect('/')
         return
 
 
 class NotifyAll(MyHandler):
     def get(self):
+        self.assert_current_user_admin()
+
+        count = 0
         families = data.Family.all().fetch(1000)
         for family in families:
-            logging.info('queuing ' + family.name)
-            taskqueue.add(
-                url='/admin/notify/' + str(family.key()),
-                method='GET')
+            count += 1
+            notify_url = '/service/notify/' + str(family.key())
+            logging.info('queuing notify task for [%s] at [%s]', family.name, notify_url)
+            taskqueue.add(url=notify_url, method='GET')
 
-        logging.info('done')
-        self.response.out.write('done')
-
-
-class MigrateLibraries(MyHandler):
-    def get(self):
-        wpl = data.Library(
-            key_name='wpl',
-            type='wpl',
-            name='Waterloo')
-
-        wpl.put()
-
-        kpl = data.Library(
-            key_name='kpl',
-            type='wpl',
-            name='Kitchener')
-
-        kpl.put()
-
-        self.redirect('/account')
-
-
-class MigrateCards(MyHandler):
-    def get(self):
-        user = users.get_current_user()
-
-        logging.debug('user ' + str(user) + ' is an admin? ' + str(users.is_current_user_admin()))
-        if not user or not users.is_current_user_admin():
-            return
-
-        cards = data.Card.all().fetch(1000)
-        for card in cards:
-            logging.debug('loaded card ' + card.to_xml())
-            card.library = data.Library.get_by_key_name(card.library_id)
-            card.put()
-            logging.info('saved card ' + card.to_xml())
-
-        self.redirect('/account')
-
-
-class MigrateUserToPrincipal(MyHandler):
-    def get(self):
-        families = data.Family.all().fetch(1000)
-        for family in families:
-            logging.debug('loaded family ' + family.to_xml())
-            if family.principals:
-                continue
-            family.principals = [family.user]
-            family.put()
-            logging.info('saved family ' + family.to_xml())
-
-        self.redirect('/account')
+        message = 'queued tasks for %d families' % (count,)
+        logging.info(message)
+        self.response.out.write(message)
 
 
 class NotFound(MyHandler):
@@ -548,6 +606,7 @@ class NotFound(MyHandler):
 
 class PopulateData(MyHandler):
     def get(self):
+        self.assert_current_user_admin()
         libraries = {}
         for l in data.Library.all():
             libraries[l.name] = l
@@ -568,60 +627,25 @@ class PopulateData(MyHandler):
 
 class Logout(MyHandler):
     def get(self):
-        remove_user_cookie(self.response)
-        self.redirect(users.create_logout_url('/'))
+        self.session['impersonating_user_email'] = None
+        self.session['user_email'] = None
+        self.redirect('/')
 
-
-class TryLogin(webapp2.RequestHandler):
-    def get(self):
-        providers = {
-            'Google': 'www.google.com/accounts/o8/id',
-            'MyOpenID': 'myopenid.com',
-            'Blair Conrad\'s MyOpenID': 'blair.conrad.myopenid.com',
-            'Blair Conrad\'s Wordpress': 'blairconrad.wordpress.com',
-            'Yahoo': 'yahoo.com',
-            'StackExchange': 'openid.stackexchange.com',
-        }
-
-        user = users.get_current_user()
-        if user:  # signed in already
-
-            logging.debug('nickname: %s, email: %s, user_id: %s, federated_identity: %s, federated_provider: %s',
-                          user.nickname(), user.email(), user.user_id(),
-                          user.federated_identity(), user.federated_provider())
-
-            self.response.out.write('Hello <em>%s</em>! [<a href="%s">sign out</a>]' % (
-                user.nickname(), users.create_logout_url(self.request.uri)))
-
-        else:     # let user choose authenticator
-            self.response.out.write('Hello world! Sign in at: ')
-            for name, uri in providers.items():
-                self.response.out.write('[<a href="%s">%s</a>]' % (
-                    users.create_login_url(dest_url='/trylogin', federated_identity=uri), name))
-
-
-class OpenIdLoginHandler(MyHandler):
-    def get(self):
-        continue_url = self.request.GET.get('continue')
-        login_url = users.create_login_url(dest_url=continue_url)
-        logging.debug('OpenIdLoginHandler: redirecting to %s', login_url)
-
-        self.redirect(login_url)
 
 logging.getLogger().setLevel(logging.DEBUG)
 logging.info('running main')
 handlers = [
-    ('/trylogin$', TryLogin),
-    ('/_ah/login_required$', OpenIdLoginHandler),
+    ('/oauth2/([a-z]+)', OAuth2),
     ('/checkcard/(.*)$', CheckCard),
     ('/savecard', SaveCard),
     ('/removecard/(.*)$', RemoveCard),
     ('/changepin/(.*)/(.*)$', ChangePin),
-    ('/admin/migrateusertoprincipal$', MigrateUserToPrincipal),
     ('/admin/notify/(.*)$', AdminNotify),
+    ('/system/notify/(.*)$', AdminNotify),
     ('/admin/notifytest/(.*)$', AdminNotifyTest),
     ('/admin/impersonate/(.*)$', Impersonate),
     ('/admin/checkcard/(.*)$', AdminCheckCard),
+    ('/system/checkcard/(.*)$', AdminCheckCard),
     ('/admin/checkedcards/(.*)$', ViewCheckedCards),
     ('/admin/auditlog$', AuditLog),
     ('/admin/auditlog/(.*)$', AuditLog),
@@ -631,9 +655,12 @@ handlers = [
 for c in (About, Summary, Account, SaveFamily, AddResponsible, SaveCard, RemoveResponsible, Logout):
     handlers.append(('/' + c.__name__.lower() + '$', c))
 
-for c in (ListFamilies, PopulateData, MigrateLibraries, MigrateCards, NotifyAll, CheckAllCards, StopImpersonating):
+for c in (ListFamilies, PopulateData, NotifyAll, CheckAllCards, StopImpersonating):
     handlers.append(('/admin/' + c.__name__.lower() + '$', c))
+
+for c in (NotifyAll, CheckAllCards):
+    handlers.append(('/system/' + c.__name__.lower() + '$', c))
 
 handlers.append(('.*', NotFound))
 
-application = webapp2.WSGIApplication(handlers, debug=True)
+application = webapp2.WSGIApplication(handlers, debug=True, config=config.webapp2_config)
