@@ -589,7 +589,7 @@ class NotifyAll(MyHandler):
         families = data.Family.all().fetch(1000)
         for family in families:
             count += 1
-            notify_url = '/service/notify/' + str(family.key())
+            notify_url = '/system/notify/' + str(family.key())
             logging.info('queuing notify task for [%s] at [%s]', family.name, notify_url)
             taskqueue.add(url=notify_url, method='GET')
 
