@@ -18,6 +18,9 @@ handlers:
 
 - url: /admin/.*
   script: libraryhippo.application
+
+- url: /system/.*
+  script: libraryhippo.application
   login: admin
 
 - url: /.*
