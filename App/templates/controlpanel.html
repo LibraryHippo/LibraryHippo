@@ -1,0 +1,18 @@
+{%extends "base.html" %}
+
+{% block title %}LibraryHippo Control Panel{% endblock %}
+
+{% block header %}LibraryHippo Control Panel{% endblock %}
+
+{% block content %}
+<ul>
+  <li><a href="{{ dashboard }}">Dashboard</a></li>
+  <li><a href="/admin/listfamilies">List Families</a></li>
+  <li><a href="/stats">Stats</a></li>
+  <li><a href="/admin/auditlog">Audit Log</a></li>
+</ul>
+<ul>
+  <li><a href="/admin/checkallcards">Check all cards</a></li>
+  <li><a href="/admin/notifyall">Notify all</a></li>
+</ul>
+{% endblock %}
