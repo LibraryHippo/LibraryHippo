@@ -540,7 +540,7 @@ class ControlPanel(MyHandler):
         else:
             dashboard = 'https://console.developers.google.com/project/libraryhippo27'
 
-        self.template_values = { 'dashboard': dashboard }
+        self.template_values = {'dashboard': dashboard}
         self.render('controlpanel.html')
 
 
