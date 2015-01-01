@@ -1,3 +1,4 @@
+import os
 import logging
 import uuid
 import urlparse
@@ -109,7 +110,7 @@ class MyHandler(webapp2.RequestHandler):
 
         self.template_values['logout_url'] = '/logout'
         if self.is_current_user_admin():
-            self.template_values['control_panel_url'] = '/static/controlpanel.html'
+            self.template_values['control_panel_url'] = '/admin/controlpanel'
 
         logging.info('user = [%s] and family = [%s]', user, family)
 
@@ -531,6 +532,18 @@ class ListFamilies(MyHandler):
         self.render('families.html')
 
 
+class ControlPanel(MyHandler):
+    def get(self):
+        self.assert_current_user_admin()
+        if os.environ['SERVER_SOFTWARE'].startswith('Development'):
+            dashboard = 'http://localhost:8000/datastore'
+        else:
+            dashboard = 'https://console.developers.google.com/project/libraryhippo27'
+
+        self.template_values = { 'dashboard': dashboard }
+        self.render('controlpanel.html')
+
+
 class Impersonate(MyHandler):
     def get(self, username):
         self.assert_current_user_admin()
@@ -655,7 +668,7 @@ handlers = [
 for c in (About, Summary, Account, SaveFamily, AddResponsible, SaveCard, RemoveResponsible, Logout):
     handlers.append(('/' + c.__name__.lower() + '$', c))
 
-for c in (ListFamilies, PopulateData, NotifyAll, CheckAllCards, StopImpersonating):
+for c in (ListFamilies, PopulateData, NotifyAll, CheckAllCards, StopImpersonating, ControlPanel):
     handlers.append(('/admin/' + c.__name__.lower() + '$', c))
 
 for c in (NotifyAll, CheckAllCards):
