@@ -71,7 +71,7 @@ class MyHandler(webapp2.RequestHandler):
         self.session_store = sessions.get_store(request=self.request)
 
         try:
-            # Dispatch the request.
+            self.assert_is_allowed()
             webapp2.RequestHandler.dispatch(self)
         finally:
             # Save all sessions.
@@ -116,26 +116,25 @@ class MyHandler(webapp2.RequestHandler):
 
         return (user, family)
 
-    def is_current_user_admin(self):
+    def is_allowed(self):
+        if self.is_current_user_admin():
+            logging.debug('is_allowed: returning true because [%s] is an admin', self.session.get('user_email'))
+            return True
+
         path = urlparse.urlsplit(self.request.url).path
-        if path.startswith('/system/'):
-            logging.debug('is_current_user_admin: assuming true because [%s] is a system URL', self.request.url)
-            return True
-
-        user_email = self.session.get('user_email')
-        if user_email == 'blair.conrad@gmail.com':
-            logging.debug('is_current_user_admin: returning true because [%s] is an admin', user_email)
-            return True
+        if path.startswith('/admin/'):
+            logging.debug('is_allowed: returning false because [%s] is not an admin', self.session.get('user_email'))
+            return False
         else:
-            logging.debug('is_current_user_admin: returning false because [%s] is not an admin', user_email)
-            return
+            logging.debug('is_allowed: assuming true because [%s] is not an admin-only URL', self.request.url)
+            return True
 
-    def is_logged_in(self):
-        return self.session.get('user_email') is not None
+    def is_current_user_admin(self):
+        return self.session.get('user_email') == 'blair.conrad@gmail.com'
 
-    def assert_current_user_admin(self):
-        if not self.is_current_user_admin():
-            raise(Exception("You aren't an admin"))
+    def assert_is_allowed(self):
+        if not self.is_allowed():
+            self.abort(403)
 
 
 class OAuth2(MyHandler):
@@ -465,7 +464,6 @@ class AdminNotify(MyHandler):
         return template
 
     def get(self, family_key):
-        self.assert_current_user_admin()
         family = data.Family.get(family_key)
         if not family:
             raise Exception('no family')
@@ -492,7 +490,6 @@ class AdminNotify(MyHandler):
 
 class AdminNotifyTest(MyHandler):
     def get(self, family_key):
-        self.assert_current_user_admin()
         for_family = data.Family.get(family_key)
         if not for_family:
             raise Exception('no family')
@@ -505,8 +502,6 @@ class AdminNotifyTest(MyHandler):
 
 class CheckAllCards(MyHandler):
     def get(self):
-        self.assert_current_user_admin()
-
         cards = data.Card.all().fetch(1000)
         tasks = [taskqueue.Task(url='/system/checkcard/' + str(card.key()), method='GET') for card in cards]
         q = taskqueue.Queue()
@@ -518,14 +513,12 @@ class CheckAllCards(MyHandler):
 
 class AdminCheckCard(CheckCardBase):
     def get(self, card_key):
-        self.assert_current_user_admin()
         card = data.Card.get(card_key)
         self.check_card(user=users.get_current_user(), card=card)
 
 
 class ListFamilies(MyHandler):
     def get(self):
-        self.assert_current_user_admin()
         families = data.Family.all().fetch(1000)
         logging.debug(families)
         self.template_values.update({'families': families})
@@ -534,7 +527,6 @@ class ListFamilies(MyHandler):
 
 class ControlPanel(MyHandler):
     def get(self):
-        self.assert_current_user_admin()
         if os.environ['SERVER_SOFTWARE'].startswith('Development'):
             dashboard = 'http://localhost:8000/datastore'
         else:
@@ -546,9 +538,7 @@ class ControlPanel(MyHandler):
 
 class Impersonate(MyHandler):
     def get(self, username):
-        self.assert_current_user_admin()
         self.session['impersonating_user_email'] = username
-
         self.template_values.update({'user': username})
         self.render('impersonate.html')
         return
@@ -556,7 +546,6 @@ class Impersonate(MyHandler):
 
 class ViewCheckedCards(MyHandler):
     def get(self, family_key):
-        self.assert_current_user_admin()
         family = data.Family.get(family_key)
         if not family:
             raise Exception('no family')
@@ -571,7 +560,6 @@ class ViewCheckedCards(MyHandler):
 
 class AuditLog(MyHandler):
     def get(self, page='1'):
-        self.assert_current_user_admin()
         page = int(page, 10)
         now = clock.utcnow()
         events = []
@@ -588,7 +576,6 @@ class AuditLog(MyHandler):
 
 class StopImpersonating(MyHandler):
     def get(self):
-        self.assert_current_user_admin()
         self.session['impersonating_user_email'] = None
         self.redirect('/')
         return
@@ -596,8 +583,6 @@ class StopImpersonating(MyHandler):
 
 class NotifyAll(MyHandler):
     def get(self):
-        self.assert_current_user_admin()
-
         count = 0
         families = data.Family.all().fetch(1000)
         for family in families:
@@ -619,7 +604,6 @@ class NotFound(MyHandler):
 
 class PopulateData(MyHandler):
     def get(self):
-        self.assert_current_user_admin()
         libraries = {}
         for l in data.Library.all():
             libraries[l.name] = l
