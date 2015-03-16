@@ -7,204 +7,81 @@ gael.testing.add_appsever_import_paths()
 
 from BeautifulSoup import BeautifulSoup
 import rwl
-from data import Hold
 from fakes import MyCard
 from fakes import MyOpener
 
 
-def test__parse_hold__vanilla_hold__understands_hold():
-    response = BeautifulSoup('''<tr>
-       <td class="accountstyle select">
-          <input type="checkbox" name="HLD^TITLE^36501004469008^FIC Niffe^^287460"
-                 id="HLD^TITLE^36501004469008^FIC Niffe^^287460">
-       </td>
-       <td class="accountstyle title">
-      <!-- Title -->
-        <label style="font-weight: normal"
-               for="HLD^TITLE^36501004469008^FIC Niffe^^287460">Her fearful symmetry : a novel</label>
+def test__parse_holds():
+    response = BeautifulSoup('''<table id="myHolds_holdslist_table" class="holdsList sortable">
+  <thead>
+    <tr class="holdsHeader">
+      <td colspan="1" rowspan="1" class="holdsAlert">
       </td>
+      <td colspan="1" rowspan="1" class="sorttable_nosort">
+      </td>
+      <td colspan="1" rowspan="1" class="holdsID sorttable_alpha">
+        <div class="myAccountHeader_div">Title/Author</div>
+      </td>
+      <td colspan="1" rowspan="1" class="holdsStatus sorttable_alpha">
+        <div class="myAccountHeader_div">Status</div>
+      </td>
+      <td colspan="1" rowspan="1" class="holdsPickup sorttable_alpha">
+        <div class="myAccountHeader_div">Pickup at:</div>
+      </td>
+      <td colspan="1" rowspan="1" class="holdsDate">
+        <div class="myAccountHeader_div">Expires</div>
+      </td>
+      <td colspan="1" rowspan="1" class="holdsRank sorttable_numeric">
+        <div class="myAccountHeader_div">Place in queue</div>
+      </td>
+    </tr>
+  </thead>
+  <tr class="pickupHoldsLine">
+    <td colspan="1" rowspan="1" sorttable_customkey="2" class="holdsAlert">
+    </td>
+    <td colspan="1" rowspan="1" class="holdsCoverArt">
+      <input title="Select It's a wiggly world collection/3 compact discs, box set" tabindex="41"
+             class="holdsCheckbox" id="checkbox_14c1f3406f2" name="checkbox" type="checkbox" />
+      <img id="checkbox_14c1f3406f2_icon" class="t-error-icon t-invisible" alt=""
+           src="/client/assets/ea21eb42ef509455/core/spacer.gif" />
+      <div id="docId_0" class="hidden">ent://SD_ILS/0/SD_ILS:1235577|115675</div>
+      <div id="holdInitialCover_115675" class="myAccountCoverArt">
+        <img id="holdsImage_1" title="Cover image for It's a wiggly world collection/3 compact discs, box set"
+             alt="Cover image for It's a wiggly world collection/3 compact discs, box set"
+             class="accountCoverImage" src="/client/assets/ea21eb42ef509455/ctx/images/no_image.png" />
+        <div title="Cover image for It's a wiggly world collection/3 compact discs, box set"
+             class="no_image_text"
+             id="holdsImage_1Title">It's a wiggly world collection/3 compact discs, box set</div>
+      </div>
+    </td>
+    <td colspan="1" rowspan="1" class="holdsID">
+      <div id="holdTitleLinkDiv_115675">
+        <div>
+          <div class="detailPanel" id="detailPanel0">
+            <div class="t-zone" id="detailZone0">
+            </div>
+          </div>
+          <a shape="rect" tabindex="42"
+             title="It's a wiggly world collection/3compact discs, box set"
+             href="#" zoneid="detailZone0" class="hideIE"
+             id="detailClick">It's a wiggly world collection/3 compact discs, box set</a>
+        </div>
+      </div>
+      <p class="authBreak">The Wiggles,<br />
+        <span id="holdItemIdSpan_115675">WR130026-1001</span>
+      </p>
+    </td>
+    <td colspan="1" rowspan="1" class="holdsStatus">Pending</td>
+    <td colspan="1" rowspan="1" class="holdsPickup">Baden Branch Library</td>
+    <td colspan="1" rowspan="1" class="holdsDate">
+    </td>
+    <td colspan="1" rowspan="1" class="holdsRank">1</td>
+  </tr>
+</table>''')
 
-       <td class="accountstyle availability">
-         <!--not_available-->
-                <em>Your position in the holds queue</em>:
-                12
-      </td>
-       <td class="accountstyle pickup">St. Jacobs Branch Library</td>
-
-      <td class="accountstyle expiration_date">
-         30 Nov 2009
-      </td>
-
-      <td class="accountstyle status">
-         Active
-      </td>
-     </tr>''')
     lib = rwl.LibraryAccount(MyCard(), MyOpener())
-    hold = lib.parse_hold(response)
-    assert 'Her fearful symmetry : a novel' == hold.title
-    assert '' == hold.author
-    assert 12 == hold.status
-    assert datetime.date(2009, 11, 30) == hold.expires
-    assert 'St. Jacobs Branch Library' == hold.pickup
-
-
-def test__parse_hold__expires_does_not_have_leading_zeros__date_parsed():
-    response = BeautifulSoup('''<tr>
-       <td class="accountstyle select">
-          <input type="checkbox"
-                 name="HLD^TITLE^36501004469008^FIC Niffe^^287460"
-                 id="HLD^TITLE^36501004469008^FIC Niffe^^287460">
-       </td>
-       <td class="accountstyle title">
-      <!-- Title -->
-        <label style="font-weight: normal"
-               for="HLD^TITLE^36501004469008^FIC Niffe^^287460">Her fearful symmetry : a novel</label>
-      </td>
-
-       <td class="accountstyle availability">
-         <!--not_available-->
-                <em>Your position in the holds queue</em>:
-                12
-      </td>
-       <td class="accountstyle pickup">St. Jacobs Branch Library</td>
-
-      <td class="accountstyle expiration_date">
-         8 Sep 2010
-      </td>
-
-      <td class="accountstyle status">
-         Active
-      </td>
-     </tr>
-''')
-    lib = rwl.LibraryAccount(MyCard(), MyOpener())
-    hold = lib.parse_hold(response)
-    assert 'Her fearful symmetry : a novel' == hold.title
-    assert '' == hold.author
-    assert 12 == hold.status
-    assert datetime.date(2010, 9, 8) == hold.expires
-    assert 'St. Jacobs Branch Library' == hold.pickup
-
-
-def test__parse_hold__does_not_expire__expires_at_date_max():
-    response = BeautifulSoup('''<tr>
-       <td class="accountstyle select">
-          <input type="checkbox" name="HLD^TITLE^36501004469008^FIC Niffe^^287460"
-                 id="HLD^TITLE^36501004469008^FIC Niffe^^287460">
-       </td>
-       <td class="accountstyle title">
-      <!-- Title -->
-        <label style="font-weight: normal"
-               for="HLD^TITLE^36501004469008^FIC Niffe^^287460">Her fearful symmetry : a novel</label>
-      </td>
-
-       <td class="accountstyle availability">
-         <!--not_available-->
-                <em>Your position in the holds queue</em>:
-                12
-      </td>
-       <td class="accountstyle pickup">St. Jacobs Branch Library</td>
-
-      <td class="accountstyle expiration_date">
-         Never expires
-      </td>
-
-      <td class="accountstyle status">
-         Active
-      </td>
-     </tr>
-''')
-    lib = rwl.LibraryAccount(MyCard(), MyOpener())
-    hold = lib.parse_hold(response)
-    assert 'Her fearful symmetry : a novel' == hold.title
-    assert '' == hold.author
-    assert 12 == hold.status
+    hold = lib.parse_holds(response)[0]
+    assert 'It\'s a wiggly world collection/3 compact discs, box set' == hold.title
+    assert 1 == hold.status
     assert datetime.date.max == hold.expires
-    assert 'St. Jacobs Branch Library' == hold.pickup
-
-
-def test__parse_item__vanilla_item__understands_item():
-    row = BeautifulSoup('''<tr>
-<td class="defaultstyle" align="left">
-<!-- Title -->
-            National geographic kids [2009]
-        </td>
-<td class="defaultstyle" align="left">
-<!-- Author -->
-            National Geographic Society (U.S.)
-        </td>
-<td class="defaultstyle" align="left">
-<!-- Due Date -->
-<strong>17 Dec 2009,23:59</strong>
-</td>
-<td class="defaultstyle" align="left">
-<!-- Est Fines -->
-            &nbsp;
-        </td>
-</tr>''')
-    lib = rwl.LibraryAccount(MyCard(), MyOpener())
-    item = lib.parse_item(row)
-    assert 'National geographic kids [2009]' == item.title
-    assert 'National Geographic Society (U.S.)' == item.author
-    assert datetime.date(2009, 12, 17) == item.status
-
-
-def test__parse_item__date_does_not_have_leading_zeros__date_parsed():
-    row = BeautifulSoup('''<tr>
-<td class="defaultstyle" align="left">
-<!-- Title -->
-            National geographic kids [2009]
-        </td>
-<td class="defaultstyle" align="left">
-<!-- Author -->
-            National Geographic Society (U.S.)
-        </td>
-<td class="defaultstyle" align="left">
-<!-- Due Date -->
-<strong>6 Jan 2010, 23:59</strong>
-</td>
-<td class="defaultstyle" align="left">
-<!-- Est Fines -->
-            &nbsp;
-        </td>
-</tr>''')
-    lib = rwl.LibraryAccount(MyCard(), MyOpener())
-    item = lib.parse_item(row)
-    assert 'National geographic kids [2009]' == item.title
-    assert 'National Geographic Society (U.S.)' == item.author
-    assert datetime.date(2010, 1, 6) == item.status
-
-
-def test__parse_hold__ready__statis_is_ready():
-    response = BeautifulSoup('''<tr>
-          <td class="accountstyle">
-            <input type="checkbox"
-                   name="HLD^TITLE^36501002723455^DAF FIC Magnu^^300734"
-                   id="HLD^TITLE^36501002723455^DAF FIC Magnu^^300734">
-      </td>
-
-       <td class="accountstyle">
-
-      <!-- Title -->
-        <label style="font-weight: normal"
-               for="HLD^TITLE^36501002723455^DAF FIC Magnu^^300734">
-            Magnum P.I. The complete second season [DVD]</label>
-      </td>
-       <td class="accountstyle">
-          <strong> Available</strong>
-            <strong> Pickup at:</strong>
-
-             STJACOBS
-      </td>
-       <td class="accountstyle">St. Jacobs Branch Library</td>
-
-      <td class="accountstyle">
-         Never expires
-      </td>
-     </tr>''')
-    lib = rwl.LibraryAccount(MyCard(), MyOpener())
-    hold = lib.parse_hold(response)
-    assert 'Magnum P.I. The complete second season [DVD]' == hold.title
-    assert Hold.READY == hold.status
-    assert datetime.date.max == hold.expires
-    assert 'St. Jacobs Branch Library' == hold.pickup
+    assert 'Baden Branch Library' == hold.pickup

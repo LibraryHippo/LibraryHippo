@@ -2,12 +2,11 @@
 
 import sys
 import logging
-import datetime
+import json
 import re
 import urlparse
 from BeautifulSoup import BeautifulSoup
-from data import Hold, Item, LoginError, CardInfo, CardStatus
-import utils.soup
+from data import Hold, LoginError, CardInfo, CardStatus
 
 
 class LibraryAccount:
@@ -18,84 +17,6 @@ class LibraryAccount:
 
     def base_url(self):
         return 'http://www.rwlibrary.ca'
-
-    def get_date_from_element(self, element):
-        utils.soup.remove_comments(element)
-        date = ''.join(utils.soup.text(element)).strip()
-        logging.debug('date string is: %s', date)
-        match = re.match('\d\d? \w{3} \d\d\d\d', date)
-        if match:
-            date = match.group()
-            return datetime.datetime.strptime(date, '%d %b %Y').date()
-
-        # just return the original string, as we don't know what else to do
-        logging.error('using date string in unknown format: %s', date)
-        return date
-
-    def get_title_from_hold_row(self, hold_row):
-        title_element = hold_row('td')[1]
-        utils.soup.remove_comments(title_element)
-        return ''.join(utils.soup.text(title_element))
-
-    def get_position_from_hold_row(self, hold_row):
-        position_element = hold_row('td')[2]
-        utils.soup.remove_comments(position_element)
-        position = ''.join(utils.soup.text(position_element))
-        if position.startswith('Available'):
-            return Hold.READY
-        position = position.replace('Your position in the holds queue:', '').strip()
-        try:
-            position = int(position)
-        except ValueError:
-            pass
-        return position
-
-    def get_pickup_from_hold_row(self, hold_row):
-        pickup_element = hold_row('td')[3]
-        utils.soup.remove_comments(pickup_element)
-        return ''.join(utils.soup.text(pickup_element))
-
-    def get_expires_from_hold_row(self, hold_row):
-        expires_element = hold_row('td')[4]
-        expires = self.get_date_from_element(expires_element)
-        if expires == 'Never expires':
-            return datetime.date.max
-        return expires
-
-    def parse_hold(self, hold_row):
-        entry = Hold(self.library, self.card)
-        entry.title = self.get_title_from_hold_row(hold_row)
-        entry.status = self.get_position_from_hold_row(hold_row)
-        entry.pickup = self.get_pickup_from_hold_row(hold_row)
-        entry.expires = self.get_expires_from_hold_row(hold_row)
-        return entry
-
-    def get_title_from_item_row(self, item_row):
-        title_element = item_row('td')[0]
-        utils.soup.remove_comments(title_element)
-        return ''.join(utils.soup.text(title_element))
-
-    def get_author_from_item_row(self, item_row):
-        author_element = item_row('td')[1]
-        utils.soup.remove_comments(author_element)
-        return ''.join(utils.soup.text(author_element))
-
-    def get_due_date_from_item_row(self, item_row):
-        due_element = item_row('td')[2]
-        return self.get_date_from_element(due_element)
-
-    def get_fines_from_item_row(self, item_row):
-        fines_element = item_row('td')[3]
-        utils.soup.remove_comments(fines_element)
-        return ''.join(utils.soup.text(fines_element))
-
-    def parse_item(self, item_row):
-        entry = Item(self.library, self.card)
-        entry.title = self.get_title_from_item_row(item_row)
-        entry.author = self.get_author_from_item_row(item_row)
-        entry.status = self.get_due_date_from_item_row(item_row)
-        entry.add_status_note(self.get_fines_from_item_row(item_row))
-        return entry
 
     def login(self):
         home_page_url = self.base_url() + '/en'
@@ -154,33 +75,51 @@ class LibraryAccount:
             message=message)
 
     def load_info_page(self, info_path_url):
-        info_page_response = BeautifulSoup(self.fetcher(info_path_url, deadline=10).content)
+        self.fetcher(info_path_url, deadline=10).content
 
+    def parse_holds(self, holds_soup):
         holds = []
-        holds_tables = info_page_response.findAll('tbody', id=['tblHold', 'tblAvail'])
-        for holds_table in holds_tables:
-            holds_rows = holds_table.findAll('tr')
-            for row in holds_rows:
-                holds.append(self.parse_hold(row))
+        holds_rows = holds_soup.findAll('tr', {'class': 'pickupHoldsLine'})
+        for row in holds_rows:
+            title = row('td')[2].find('a').string
+            author = row('td')[2].find('p').string
+            pickup = row('td')[4].string
+            rank = int(row('td')[6].string)
 
-        items = self.get_items(info_page_response)
+            logging.debug('%s / %s / %s', title, author, rank)
 
-        return CardStatus(self.card, items, holds)
+            hold = Hold(self.library, self.card)
+            hold.title = title
+            hold.author = author
+            hold.pickup = pickup
+            hold.status = int(rank)
 
-    def get_items(self, page):
-        items = []
-        item_due_dates = page.findAll(text=' Due Date ')
-        if item_due_dates:
-            item_rows = [i.parent.parent for i in item_due_dates]
-            items = [self.parse_item(row) for row in item_rows]
-        return items
+            holds.append(hold)
+
+        return holds
 
     def get_status(self):
         my_account_url = self.login()
-        status = self.load_info_page(my_account_url)
-        status.info.append(CardInfo(self.card.library.name, self.card.name,
-                                    "RWL card-checking is temporarily unavailable. We're working on it."))
-        return status
+        self.load_info_page(my_account_url)
+
+        url = urlparse.urljoin(my_account_url, 'account.holds.libraryholdsaccordion?')
+        holds_page_response = self.fetcher(url, method='POST', deadline=10, headers={
+            'Accept': 'text/javascript',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'Origin': 'http://olco.canlib.ca',
+            'Referer': 'http://olco.canlib.ca/client/en_US/rwl/search/account?',
+            }, payload={'t%3Azoneid': 'libraryHoldsAccordion'}).content
+
+        holds_page_response_json = json.loads(holds_page_response)
+
+        holds_soup = BeautifulSoup(holds_page_response_json['content'])
+        holds = self.parse_holds(holds_soup)
+
+        card_status = CardStatus(self.card, [], holds)
+        card_status.info.append(CardInfo(self.card.library.name, self.card.name,
+                                         "RWL card-checking only handles holds for now, and is pretty rudimentary."))
+        return card_status
 
 
 def main(args=None):
