@@ -82,7 +82,7 @@ class LibraryAccount:
         holds_rows = holds_soup.findAll('tr', {'class': 'pickupHoldsLine'})
         for row in holds_rows:
             title = row('td')[2].find('a').string
-            author = row('td')[2].find('p').string
+            author = row('td')[2].find('p').find(text=True)
             pickup = row('td')[4].string
             rank = int(row('td')[6].string)
 

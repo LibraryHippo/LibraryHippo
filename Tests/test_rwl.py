@@ -82,6 +82,7 @@ def test__parse_holds():
     lib = rwl.LibraryAccount(MyCard(), MyOpener())
     hold = lib.parse_holds(response)[0]
     assert 'It\'s a wiggly world collection/3 compact discs, box set' == hold.title
+    assert 'The Wiggles,' == hold.author
     assert 1 == hold.status
     assert datetime.date.max == hold.expires
     assert 'Baden Branch Library' == hold.pickup
