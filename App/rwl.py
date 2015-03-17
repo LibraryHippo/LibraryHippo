@@ -83,6 +83,7 @@ class LibraryAccount:
         for row in holds_rows:
             title = row('td')[2].find('a').string
             author = row('td')[2].find('p').find(text=True)
+            is_frozen = row('td')[3].string == 'Suspended'
             pickup = row('td')[4].string
             rank = int(row('td')[6].string)
 
@@ -93,6 +94,8 @@ class LibraryAccount:
             hold.author = author
             hold.pickup = pickup
             hold.status = int(rank)
+            if is_frozen:
+                hold.add_status_note('frozen')
 
             holds.append(hold)
 

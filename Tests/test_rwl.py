@@ -71,18 +71,63 @@ def test__parse_holds():
         <span id="holdItemIdSpan_115675">WR130026-1001</span>
       </p>
     </td>
-    <td colspan="1" rowspan="1" class="holdsStatus">Pending</td>
+    <td colspan="1" rowspan="1" class="holdsStatus">Suspended</td>
     <td colspan="1" rowspan="1" class="holdsPickup">Baden Branch Library</td>
     <td colspan="1" rowspan="1" class="holdsDate">
     </td>
     <td colspan="1" rowspan="1" class="holdsRank">1</td>
   </tr>
+  <tr class='pickupHoldsLine'>
+    <td colspan='1' rowspan='1' sorttable_customkey='2' class='holdsAlert'>
+    </td>
+    <td colspan='1' rowspan='1' class='holdsCoverArt'>
+      <input title='Select Big Hero 6 [DVD]' tabIndex='45' class='holdsCheckbox' id='checkbox_14c25a8c22e_1'
+             name='checkbox_1' type='checkbox'>
+  </input>
+  <img id='checkbox_14c25a8c22e_1_icon' class='t-error-icon t-invisible' alt=''
+       src='/client/assets/ea21eb42ef509455/core/spacer.gif'/>
+  <div id='docId_2' class='hidden'>ent://SD_ILS/0/SD_ILS:2540577|1669272</div>
+  <div id='holdInitialCover_1669272' class='myAccountCoverArt'>
+    <img id='holdsImage_3' title='Cover image for Big Hero 6 [DVD]' alt='Cover image for Big Hero 6 [DVD]'
+         class='accountCoverImage' src='/client/assets/ea21eb42ef509455/ctx/images/no_image.png'/>
+    <div title='Cover image for Big Hero 6 [DVD]' class='no_image_text' id='holdsImage_3Title'>Big Hero 6 [DVD]</div>
+  </div>
+    </td>
+    <td colspan='1' rowspan='1' class='holdsID'>
+      <div id='holdTitleLinkDiv_1669272'>
+        <div>
+          <div class='detailPanel' id='detailPanel2'>
+            <div class='t-zone' id='detailZone2'>
+            </div>
+          </div>
+          <a shape='rect' TABINDEX='46' title='Big Hero 6 [DVD]' href='#' zoneId='detailZone2' class='hideIE'
+             id='detailClick_1'>Big Hero 6 [DVD]</a>
+        </div>
+      </div>
+      <p class='authBreak'>
+        Hall, Don.
+        <br/>
+        <span id='holdItemIdSpan_1669272'>2540577-1002</span>
+      </p>
+    </td>
+    <td colspan='1' rowspan='1' class='holdsStatus'>Pending</td>
+    <td colspan='1' rowspan='1' class='holdsPickup'>Baden Branch Library</td>
+    <td colspan='1' rowspan='1' class='holdsDate'>
+    </td>
+    <td colspan='1' rowspan='1' class='holdsRank'>15</td>
+  </tr>
 </table>''')
 
     lib = rwl.LibraryAccount(MyCard(), MyOpener())
-    hold = lib.parse_holds(response)[0]
-    assert 'It\'s a wiggly world collection/3 compact discs, box set' == hold.title
-    assert 'The Wiggles,' == hold.author
-    assert 1 == hold.status
-    assert datetime.date.max == hold.expires
-    assert 'Baden Branch Library' == hold.pickup
+    holds = lib.parse_holds(response)
+
+    wiggly_world_hold = holds[0]
+    assert 'It\'s a wiggly world collection/3 compact discs, box set' == wiggly_world_hold.title
+    assert 'The Wiggles,' == wiggly_world_hold.author
+    assert 1 == wiggly_world_hold.status
+    assert datetime.date.max == wiggly_world_hold.expires
+    assert 'Baden Branch Library' == wiggly_world_hold.pickup
+    assert ['frozen'] == wiggly_world_hold.status_notes
+
+    big_hero_hold = holds[1]
+    assert [] == big_hero_hold.status_notes
