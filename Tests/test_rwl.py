@@ -7,6 +7,7 @@ gael.testing.add_appsever_import_paths()
 
 from BeautifulSoup import BeautifulSoup
 import rwl
+from data import Hold
 from fakes import MyCard
 from fakes import MyOpener
 
@@ -116,6 +117,44 @@ def test__parse_holds():
     </td>
     <td colspan='1' rowspan='1' class='holdsRank'>15</td>
   </tr>
+  <tr class='pickupHoldsLine'>
+    <td colspan='1' rowspan='1' sorttable_customkey='0' class='holdsAlert'>
+      <img alt='' src='/client/images/account-icons/green!.png' title='Ready since 3/27/15'/>
+    </td>
+    <td colspan='1' rowspan='1' class='holdsCoverArt'>
+      <input title='Select Preschool songs [DVD]' tabIndex='41' class='readyHoldsCheckbox' id='checkbox_14c749e37d4'
+             name='checkbox' type='checkbox'>
+</input>
+<img id='checkbox_14c749e37d4_icon' class='t-error-icon t-invisible' alt=''
+     src='/client/assets/ea21eb42ef509455/core/spacer.gif'/>
+<div id='docId_0' class='hidden'>ent://SD_ILS/0/SD_ILS:1194280|1748738</div>
+<div id='holdInitialCover_1748738' class='myAccountCoverArt'>
+  <img id='holdsImage_1' title='Cover image for Preschool songs [DVD]' alt='Cover image for Preschool songs [DVD]'
+       class='accountCoverImage' src='/client/assets/ea21eb42ef509455/ctx/images/no_image.png'/>
+  <div title='Cover image for Preschool songs [DVD]' class='no_image_text'
+       id='holdsImage_1Title'>Preschool songs [DVD]</div>
+</div>
+    </td>
+    <td colspan='1' rowspan='1' class='holdsID'>
+      <div id='holdTitleLinkDiv_1748738'>
+        <div>
+          <div class='detailPanel' id='detailPanel0'>
+            <div class='t-zone' id='detailZone0'>
+            </div>
+          </div>
+          <a shape='rect' TABINDEX='42' title='Preschool songs [DVD]' href='#' zoneId='detailZone0' class='hideIE'
+             id='detailClick'>Preschool songs [DVD]</a>
+        </div>
+      </div>
+      <p class='authBreak'>\nMusick, Gary.\n<br/>
+        <span id='holdItemIdSpan_1748738'>36501003331993</span>
+      </p>
+    </td>
+    <td colspan='1' rowspan='1' class='holdsStatus'>Pickup by: 4/4/15</td>
+    <td colspan='1' rowspan='1' class='holdsPickup'>New Hamburg Branch Library</td>
+    <td colspan='1' rowspan='1' class='holdsDate'></td>
+    <td colspan='1' rowspan='1' class='holdsRank'>1</td>
+  </tr>
 </table>''')
 
     lib = rwl.LibraryAccount(MyCard(), MyOpener())
@@ -131,3 +170,7 @@ def test__parse_holds():
 
     big_hero_hold = holds[1]
     assert [] == big_hero_hold.status_notes
+
+    preschool_songs_hold = holds[2]
+    assert 'Preschool songs [DVD]' == preschool_songs_hold.title
+    assert Hold.READY == preschool_songs_hold.status

@@ -77,6 +77,15 @@ class LibraryAccount:
     def load_info_page(self, info_path_url):
         self.fetcher(info_path_url, deadline=10).content
 
+    def parse_status(self, hold_row):
+        status = hold_row('td')[3].string
+
+        if status.startswith('Pickup'):
+            return Hold.READY
+
+        rank = hold_row('td')[6].string
+        return int(rank)
+
     def parse_holds(self, holds_soup):
         holds = []
         holds_rows = holds_soup.findAll('tr', {'class': 'pickupHoldsLine'})
@@ -93,7 +102,7 @@ class LibraryAccount:
             hold.title = title
             hold.author = author
             hold.pickup = pickup
-            hold.status = int(rank)
+            hold.status = self.parse_status(row)
             if is_frozen:
                 hold.add_status_note('frozen')
 
