@@ -1,22 +1,31 @@
 # -*- coding: utf-8 -*-
 
-from xml.etree import ElementTree
 import collections
 import copy
 import datetime
-import exceptions
+from . import exceptions
 import hashlib
 import hmac
-import logging
 import json
-import pickle
+import logging
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+import sys
 import threading
 import time
-import urllib
-import urlparse
-import sys
+from xml.etree import ElementTree
 
-from authomatic.exceptions import SessionError, CredentialsError, RequestElementsError
+from authomatic.exceptions import (
+    ConfigError,
+    CredentialsError,
+    ImportStringError,
+    RequestElementsError,
+    SessionError,
+)
+from authomatic import six
+from authomatic.six.moves import urllib_parse as parse
 
 
 #===============================================================================
@@ -40,8 +49,8 @@ def normalize_dict(dict_):
         Normalized dictionary.
     """
 
-    return dict([(k, v[0] if not type(v) is str and len(v) == 1 else v)
-                 for k, v in dict_.items()])
+    return dict([(k, v[0] if not isinstance(v, str) and len(v) == 1 else v)
+                 for k, v in list(dict_.items())])
 
 
 def items_to_dict(items):
@@ -120,8 +129,7 @@ def provider_id():
 
 def escape(s):
     """Escape a URL including any /."""
-    return urllib.quote(s.encode('utf-8'), safe='~')
-
+    return parse.quote(s.encode('utf-8'), safe='~')
 
 def json_qs_parser(body):
     """
@@ -134,7 +142,6 @@ def json_qs_parser(body):
         :class:`dict`, :class:`list` if input is JSON or query string,
         :class:`xml.etree.ElementTree.Element` if XML.
     """
-
     try:
         # Try JSON first.
         return json.loads(body)
@@ -148,7 +155,7 @@ def json_qs_parser(body):
         pass
 
     # Finally query string.
-    return dict(urlparse.parse_qsl(body))
+    return dict(parse.parse_qsl(body))
 
 
 def import_string(import_name, silent=False):
@@ -166,8 +173,8 @@ def import_string(import_name, silent=False):
             return __import__(import_name)
     except (ImportError, AttributeError) as e:
         if not silent:
-            raise exceptions.ImportStringError('Import from string failed for path {0}'.format(import_name),
-                                               str(e))
+            raise ImportStringError('Import from string failed for path {0}'
+                                    .format(import_name), str(e))
 
 
 def resolve_provider_class(class_):
@@ -177,7 +184,7 @@ def resolve_provider_class(class_):
     :param class_name: :class:`string` or :class:`authomatic.providers.BaseProvider` subclass.
     """
 
-    if type(class_) in (str, unicode):
+    if isinstance(class_, str):
         # prepare path for authomatic.providers package
         path = '.'.join([__package__, 'providers', class_])
 
@@ -198,7 +205,7 @@ def id_to_name(config, short_name):
         Value of the id parameter in the :ref:`config` to search for.
     """
 
-    for k, v in config.items():
+    for k, v in list(config.items()):
         if v.get('id') == short_name:
             return k
             break
@@ -236,7 +243,7 @@ class ReprMixin(object):
         # construct keyword arguments
         args = []
 
-        for k, v in self.__dict__.items():
+        for k, v in list(self.__dict__.items()):
 
             # ignore attributes with leading underscores and those listed in _repr_ignore
             if v and not k.startswith('_') and not k in self._repr_ignore:
@@ -343,7 +350,7 @@ class Session(object):
             Expires value will be ``Thu, 01-Jan-1970 00:00:01 GMT``.
         """
         value = 'deleted' if delete else self._serialize(self.data)
-        split_url = urlparse.urlsplit(self.adapter.url)
+        split_url = parse.urlsplit(self.adapter.url)
         domain = split_url.netloc.split(':')[0]
 
         # Work-around for issue #11, failure of WebKit-based browsers to accept
@@ -366,8 +373,15 @@ class Session(object):
     def save(self):
         """Adds the session cookie to headers."""
         if self.data:
-            # Set the cookie header.
-            self.adapter.set_header('Set-Cookie', self.create_cookie())
+            cookie = self.create_cookie()
+            cookie_len = len(cookie)
+
+            if cookie_len > 4093:
+                raise SessionError('Cookie too long! The cookie size {0} '
+                                   'is more than 4093 bytes.'
+                                   .format(cookie_len))
+
+            self.adapter.set_header('Set-Cookie', cookie)
 
             # Reset data
             self._data = {}
@@ -392,8 +406,8 @@ class Session(object):
 
     def _signature(self, *parts):
         """Creates signature for the session."""
-        signature = hmac.new(self.secret, digestmod=hashlib.sha1)
-        signature.update('|'.join(parts))
+        signature = hmac.new(six.b(self.secret), digestmod=hashlib.sha1)
+        signature.update(six.b('|'.join(parts)))
         return signature.hexdigest()
 
     def _serialize(self, value):
@@ -407,19 +421,22 @@ class Session(object):
             Serialized value.
         """
 
-        data = copy.deepcopy(value)
+        # data = copy.deepcopy(value)
+        data = value
 
         # 1. Serialize
-        serialized = json.dumps(data)
+        serialized = pickle.dumps(data).decode('latin-1')
 
         # 2. Encode
         # Percent encoding produces smaller result then urlsafe base64.
-        encoded = urllib.quote(serialized, '')
+        encoded = parse.quote(serialized, '')
 
         # 3. Concatenate
         timestamp = str(int(time.time()))
         signature = self._signature(self.name, encoded, timestamp)
-        return '|'.join([encoded, timestamp, signature])
+        concatenated = '|'.join([encoded, timestamp, signature])
+
+        return concatenated
 
 
     def _deserialize(self, value):
@@ -445,10 +462,10 @@ class Session(object):
             return None
 
         # 2. Decode
-        decoded = urllib.unquote(encoded)
+        decoded = parse.unquote(encoded)
 
         # 1. Deserialize
-        deserialized = json.loads(decoded)
+        deserialized = pickle.loads(decoded.encode('latin-1'))
 
         return deserialized
 
@@ -798,8 +815,9 @@ class Credentials(ReprMixin):
         """
 
         if self.provider_id is None:
-            raise exceptions.ConfigError('To serialize credentials you need to specify a unique ' + \
-                                         'integer under the "id" key in the config for each provider!')
+            raise ConfigError('To serialize credentials you need to specify a '
+                              'unique integer under the "id" key in the config '
+                              'for each provider!')
 
         # Get the provider type specific items.
         rest = self.provider_type_class().to_tuple(self)
@@ -814,7 +832,7 @@ class Credentials(ReprMixin):
         concatenated = '\n'.join(stringified)
 
         # Percent encode.
-        return urllib.quote(concatenated, '')
+        return parse.quote(concatenated, '')
 
 
     @classmethod
@@ -833,10 +851,10 @@ class Credentials(ReprMixin):
         """
 
         # Accept both serialized and normal.
-        if type(credentials) is Credentials:
+        if isinstance(credentials, Credentials):
             return credentials
 
-        decoded = urllib.unquote(credentials)
+        decoded = parse.unquote(credentials)
 
         split = decoded.split('\n')
 
@@ -1067,6 +1085,16 @@ class Response(ReprMixin):
         return self.httplib_response.getheaders()
 
 
+    def is_binary_string(self, content):
+        """
+        Return true if string is binary data
+        """
+
+        textchars = (bytearray([7, 8, 9, 10, 12, 13, 27]) +
+                     bytearray(range(0x20, 0x100)))
+        return bool(content.translate(None, textchars))
+
+
     @property
     def content(self):
         """
@@ -1074,7 +1102,11 @@ class Response(ReprMixin):
         """
 
         if not self._content:
-            self._content = self.httplib_response.read()
+            content = self.httplib_response.read()
+            if self.is_binary_string(content):
+                self._content = content
+            else:
+                self._content = content.decode('utf-8')
         return self._content
 
 
@@ -1156,7 +1188,7 @@ class RequestElements(tuple):
         Query string of the request.
         """
 
-        return urllib.urlencode(self.params)
+        return parse.urlencode(self.params)
 
     @property
     def full_url(self):
@@ -1275,7 +1307,8 @@ class Authomatic(object):
             # retrieve required settings for current provider and raise exceptions if missing
             provider_settings = self.config.get(provider_name)
             if not provider_settings:
-                raise exceptions.ConfigError('Provider name "{0}" not specified!'.format(provider_name))
+                raise ConfigError('Provider name "{0}" not specified!'
+                                  .format(provider_name))
     
             if not (session is None or session_saver is None):
                 session = session
@@ -1292,7 +1325,8 @@ class Authomatic(object):
             # Resolve provider class.
             class_ = provider_settings.get('class_')
             if not class_:
-                raise exceptions.ConfigError('The "class_" key not specified in the config for provider {0}!'.format(provider_name))
+                raise ConfigError('The "class_" key not specified in the config'
+                                  ' for provider {0}!'.format(provider_name))
             ProviderClass = resolve_provider_class(class_)
 
             # FIXME: Find a nicer solution

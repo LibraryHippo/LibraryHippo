@@ -22,8 +22,6 @@ Providers which implement the |oauth1|_ protocol.
     
 """
 
-from authomatic import providers
-from authomatic.exceptions import CancellationError, FailureError, OAuth1Error
 import abc
 import authomatic.core as core
 import binascii
@@ -32,10 +30,16 @@ import hashlib
 import hmac
 import logging
 import time
-import urllib
-import urlparse
 import uuid
 
+from authomatic import providers
+from authomatic.exceptions import (
+    CancellationError,
+    FailureError,
+    OAuth1Error,
+)
+from authomatic import six
+from authomatic.six.moves import urllib_parse as parse
 
 
 __all__ = ['OAuth1', 'Bitbucket', 'Flickr', 'Meetup', 'Plurk', 'Twitter', 'Tumblr', 'UbuntuOne',
@@ -53,14 +57,14 @@ def _normalize_params(params):
     """
     
     if type(params) == dict:
-        params = params.items()
+        params = list(params.items())
     
     # remove "realm" and "oauth_signature"
     params = [(k, v) for k, v in params if k not in ('oauth_signature', 'realm')]
     # sort
     params.sort()
     # convert to query string
-    qs = urllib.urlencode(params)
+    qs = parse.urlencode(params)
     # replace "+" to "%20"
     qs = qs.replace('+', '%20')
     # replace "%7E" to "%20"
@@ -87,9 +91,9 @@ class BaseSignatureGenerator(object):
     """
     Abstract base class for all signature generators.
     """
-    
+
     __metaclass__ = abc.ABCMeta
-    
+
     #: :class:`str` The name of the signature method.
     method = ''
     
@@ -177,10 +181,10 @@ class HMACSHA1SignatureGenerator(BaseSignatureGenerator):
         
         base_string = _create_base_string(method, base, params)
         key = cls._create_key(consumer_secret, token_secret)
-        
-        hashed = hmac.new(key, base_string, hashlib.sha1)
-        
-        
+
+        hashed = hmac.new(six.b(key), base_string.encode('utf-8'), hashlib.sha1)
+
+
         base64_encoded = binascii.b2a_base64(hashed.digest())[:-1]
         
         return base64_encoded
@@ -197,10 +201,10 @@ class PLAINTEXTSignatureGenerator(BaseSignatureGenerator):
     @classmethod
     def create_signature(cls, method, base, params, consumer_secret, token_secret=''):
         
-        consumer_secret = urllib.quote(consumer_secret, '')
-        token_secret = urllib.quote(token_secret, '')
+        consumer_secret = parse.quote(consumer_secret, '')
+        token_secret = parse.quote(token_secret, '')
         
-        return urllib.quote('&'.join((consumer_secret, token_secret)), '')
+        return parse.quote('&'.join((consumer_secret, token_secret)), '')
 
 
 class OAuth1(providers.AuthorizationProvider):
@@ -321,7 +325,7 @@ class OAuth1(providers.AuthorizationProvider):
             # http://oauth.net/core/1.0a/#rfc.section.9.1
             params['oauth_signature_method'] = cls._signature_generator.method
             params['oauth_timestamp'] = str(int(time.time()))
-            params['oauth_nonce'] = cls.csrf_generator(uuid.uuid4())
+            params['oauth_nonce'] = cls.csrf_generator(str(uuid.uuid4()))
             params['oauth_version'] = '1.0'
             
             # add signature to params
@@ -598,7 +602,42 @@ class Twitter(OAuth1):
     * Dashboard: https://dev.twitter.com/apps
     * Docs: https://dev.twitter.com/docs
     * API reference: https://dev.twitter.com/docs/api
+
+    Supported :class:`.User` properties:
+
+    * city
+    * country
+    * id
+    * link
+    * locale
+    * name
+    * picture
+    * username
+
+    Unsupported :class:`.User` properties:
+
+    * birth_date
+    * email
+    * gender
+    * first_name
+    * last_name
+    * nickname
+    * phone
+    * postal_code
+    * timezone
+
     """
+
+    supported_user_attributes = core.SupportedUserAttributes(
+        city=True,
+        country=True,
+        id=True,
+        link=True,
+        locale=True,
+        name=True,
+        picture=True,
+        username=True
+    )
     
     request_token_url = 'https://api.twitter.com/oauth/request_token'
     user_authorization_url = 'https://api.twitter.com/oauth/authenticate'
@@ -614,6 +653,12 @@ class Twitter(OAuth1):
         user.picture = data.get('profile_image_url')
         user.locale = data.get('lang')
         user.link = data.get('url')
+
+        _location = data.get('location', '')
+        if _location:
+            _city, _country = _location.split(',')
+            user.city = _city.strip()
+            user.country = _country.strip()
         return user
 
 
@@ -641,7 +686,7 @@ class Tumblr(OAuth1):
         user.link = _user.get('blogs', [{}])[0].get('url')
         
         if user.link:
-            _host = urlparse.urlsplit(user.link).netloc
+            _host = parse.urlsplit(user.link).netloc
             user.picture = 'http://api.tumblr.com/v2/blog/{0}/avatar/512'.format(_host)
         
         return user
@@ -775,7 +820,7 @@ class Yahoo(OAuth1):
         emails = _user.get('emails')
         if isinstance(emails, list):
             for email in emails:
-                if 'primary' in email.keys():
+                if 'primary' in list(email.keys()):
                     user.email = email.get('handle')
         elif isinstance(emails, dict):
             user.email = emails.get('handle')
@@ -877,7 +922,7 @@ class Xing(OAuth1):
                 user.country = _address.get('country')
                 user.postal_code = _address.get('zip_code')
 
-            _languages = _user.get('languages', {}).keys()
+            _languages = list(_user.get('languages', {}).keys())
             if _languages and _languages[0]:
                 user.locale = _languages[0]
 

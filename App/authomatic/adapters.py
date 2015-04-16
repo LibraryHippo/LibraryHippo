@@ -64,7 +64,6 @@ class BaseAdapter(object):
 
     __metaclass__ = abc.ABCMeta
 
-
     @abc.abstractproperty
     def params(self):
         """
@@ -163,7 +162,8 @@ class DjangoAdapter(BaseAdapter):
         self.response[key] = value
         
     def set_status(self, status):
-        self.response.status_code = status
+        status_code, reason = status.split(' ', 1)
+        self.response.status_code = int(status_code)
 
 
 class WebObAdapter(BaseAdapter):
@@ -264,7 +264,7 @@ class WerkzeugAdapter(BaseAdapter):
         self.response = response
 
     def write(self, value):
-        self.response.data += value
+        self.response.data = self.response.data.decode('utf-8') + value
 
     def set_header(self, key, value):
         self.response.headers[key] = value

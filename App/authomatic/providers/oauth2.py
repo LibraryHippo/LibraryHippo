@@ -29,7 +29,7 @@ Providers which implement the |oauth2|_ protocol.
     
 """
 
-from urllib import urlencode
+from authomatic.six.moves.urllib.parse import urlencode
 import datetime
 import logging
 
@@ -415,7 +415,7 @@ class Amazon(OAuth2):
 
     Thanks to `Ghufran Syed <https://github.com/ghufransyed>`__.
 
-    * Dashboard: https://developer.amazon.com/home.html
+    * Dashboard: https://developer.amazon.com/lwa/sp/overview.html
     * Docs: https://developer.amazon.com/public/apis/engage/login-with-amazon/docs/conceptual_overview.html
     * API reference: https://developer.amazon.com/public/apis
     
@@ -900,6 +900,7 @@ class Foursquare(OAuth2):
     same_origin = False
 
     supported_user_attributes = core.SupportedUserAttributes(
+        birth_date=True,
         city=True,
         country=True,
         email=True,
@@ -944,13 +945,17 @@ class Foursquare(OAuth2):
         user.last_name = _user.get('lastName')
         user.gender = _user.get('gender')
 
+        _birth_date = _user.get('birthday')
+        if _birth_date:
+            user.birth_date = datetime.datetime.fromtimestamp(_birth_date)
+
         _photo = _user.get('photo', {})
         if isinstance(_photo, dict):
             _photo_prefix = _photo.get('prefix', '').strip('/')
             _photo_suffix = _photo.get('suffix', '').strip('/')
             user.picture = '/'.join([_photo_prefix, _photo_suffix])
 
-        if isinstance(_photo, basestring):
+        if isinstance(_photo, str):
             user.picture = _photo
         
         user.city, user.country = _user.get('homeCity', ', ').split(', ')
@@ -1116,6 +1121,20 @@ class Google(OAuth2):
             if not 'approval_prompt' in self.user_authorization_params:
                 # And also approval_prompt=force.
                 self.user_authorization_params['approval_prompt'] = 'force'
+
+    @classmethod
+    def _x_request_elements_filter(cls, request_type, request_elements,
+                                   credentials):
+        """
+        Google doesn't accept client ID and secret to be at the same time in
+        request parameters and in the basic authorization header in the
+        access token request.
+        """
+        if request_type is cls.ACCESS_TOKEN_REQUEST_TYPE:
+            params = request_elements[2]
+            del params['client_id']
+            del params['client_secret']
+        return request_elements
     
     @staticmethod
     def _x_user_parser(user, data):
