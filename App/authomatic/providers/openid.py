@@ -73,39 +73,6 @@ XRDS_XML = \
 """
 
 
-class SessionWrapper(object):
-    """Handles JSON serialization of non-JSON-serializable values."""
-
-    NON_JSON_SERIALIZABLE = (YadisServiceManager, OpenIDServiceEndpoint)
-
-    def __init__(self, session, prefix='__not_json_serializable__'):
-        self.session = session
-        self.prefix = prefix
-
-    def __setitem__(self, key, val):
-        if isinstance(val, self.NON_JSON_SERIALIZABLE):
-            self.session[key] = self.prefix + pickle.dumps(val)
-        else:
-            try:
-                json.dumps(val)
-            except TypeError:
-                assert False, (key, val)
-
-    def get(self, key):
-        val = self.session.get(key)
-        if val and val.startswith(self.prefix):
-            split = val.split(self.prefix)[1]
-            unpickled = pickle.loads(split)
-            # import pdb; pdb.set_trace()
-
-            return unpickled
-        else:
-            return val
-
-    def __delitem__(self, key):
-        return self.session.__delitem__(key)
-
-
 class SessionOpenIDStore(object):
     """
     A very primitive session-based implementation of the
@@ -136,9 +103,15 @@ class SessionOpenIDStore(object):
         self._log(logging.DEBUG,
                   'SessionOpenIDStore: Storing association to session.')
 
+        serialized = association.serialize()
+        decoded = serialized.decode('latin-1')
+
+        assoc = decoded
+        # assoc = serialized
+
         # Always store only one association as a tuple.
         self.session[self.ASSOCIATION_KEY] = (server_url, association.handle,
-                                              association.serialize())
+                                              assoc)
 
     def getAssociation(self, server_url, handle=None):
         # Try to get association.
@@ -146,7 +119,7 @@ class SessionOpenIDStore(object):
         if assoc and assoc[0] == server_url:
             # If found deserialize and return it.
             self._log(logging.DEBUG, 'SessionOpenIDStore: Association found.')
-            return Association.deserialize(assoc[2])
+            return Association.deserialize(assoc[2].encode('latin-1'))
         else:
             self._log(logging.DEBUG,
                       'SessionOpenIDStore: Association not found.')
@@ -315,8 +288,7 @@ class OpenID(providers.AuthenticationProvider):
     def login(self):
         # Instantiate consumer
         self.store._log = self._log
-        oi_consumer = consumer.Consumer(SessionWrapper(self.session),
-                                        self.store)
+        oi_consumer = consumer.Consumer(self.session, self.store)
         
         # handle realm and XRDS if there is only one query parameter
         if self.use_realm and len(self.params) == 1:
@@ -371,7 +343,7 @@ class OpenID(providers.AuthenticationProvider):
                     self._log(logging.INFO, 'Got AX data.')
                     ax_data = {}
                     # convert iterable values to their first item
-                    for k, v in ax_response.data.iteritems():
+                    for k, v in ax_response.data.items():
                         if v and type(v) in (list, tuple):
                             ax_data[k] = v[0]
                     data['ax'] = ax_data
