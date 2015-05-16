@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-import sys
-import logging
 import datetime
+import logging
+import json
 import re
+import urlparse
 from BeautifulSoup import BeautifulSoup
 from data import Hold, Item, LoginError, CardStatus
-import utils.soup
 
 
 class LibraryAccount:
@@ -16,159 +16,151 @@ class LibraryAccount:
         self.fetcher = fetcher
 
     def base_url(self):
-        return 'http://www.regionofwaterloo.canlib.ca'
-
-    def login_url(self):
-        return self.base_url() + '/uhtbin/cgisirsi/x/0/0/49?user_id=WEBSERVER&password='
-
-    def get_date_from_element(self, element):
-        utils.soup.remove_comments(element)
-        date = ''.join(utils.soup.text(element)).strip()
-        logging.debug('date string is: %s', date)
-        match = re.match('\d\d? \w{3} \d\d\d\d', date)
-        if match:
-            date = match.group()
-            return datetime.datetime.strptime(date, '%d %b %Y').date()
-
-        # just return the original string, as we don't know what else to do
-        logging.error('using date string in unknown format: %s', date)
-        return date
-
-    def get_title_from_hold_row(self, hold_row):
-        title_element = hold_row('td')[1]
-        utils.soup.remove_comments(title_element)
-        return ''.join(utils.soup.text(title_element))
-
-    def get_position_from_hold_row(self, hold_row):
-        position_element = hold_row('td')[2]
-        utils.soup.remove_comments(position_element)
-        position = ''.join(utils.soup.text(position_element))
-        if position.startswith('Available'):
-            return Hold.READY
-        position = position.replace('Your position in the holds queue:', '').strip()
-        try:
-            position = int(position)
-        except ValueError:
-            pass
-        return position
-
-    def get_pickup_from_hold_row(self, hold_row):
-        pickup_element = hold_row('td')[3]
-        utils.soup.remove_comments(pickup_element)
-        return ''.join(utils.soup.text(pickup_element))
-
-    def get_expires_from_hold_row(self, hold_row):
-        expires_element = hold_row('td')[4]
-        expires = self.get_date_from_element(expires_element)
-        if expires == 'Never expires':
-            return datetime.date.max
-        return expires
-
-    def parse_hold(self, hold_row):
-        entry = Hold(self.library, self.card)
-        entry.title = self.get_title_from_hold_row(hold_row)
-        entry.status = self.get_position_from_hold_row(hold_row)
-        entry.pickup = self.get_pickup_from_hold_row(hold_row)
-        entry.expires = self.get_expires_from_hold_row(hold_row)
-        return entry
-
-    def get_title_from_item_row(self, item_row):
-        title_element = item_row('td')[0]
-        utils.soup.remove_comments(title_element)
-        return ''.join(utils.soup.text(title_element))
-
-    def get_author_from_item_row(self, item_row):
-        author_element = item_row('td')[1]
-        utils.soup.remove_comments(author_element)
-        return ''.join(utils.soup.text(author_element))
-
-    def get_due_date_from_item_row(self, item_row):
-        due_element = item_row('td')[2]
-        return self.get_date_from_element(due_element)
-
-    def get_fines_from_item_row(self, item_row):
-        fines_element = item_row('td')[3]
-        utils.soup.remove_comments(fines_element)
-        return ''.join(utils.soup.text(fines_element))
-
-    def parse_item(self, item_row):
-        entry = Item(self.library, self.card)
-        entry.title = self.get_title_from_item_row(item_row)
-        entry.author = self.get_author_from_item_row(item_row)
-        entry.status = self.get_due_date_from_item_row(item_row)
-        entry.add_status_note(self.get_fines_from_item_row(item_row))
-        return entry
+        return 'http://www.rwlibrary.ca'
 
     def login(self):
-        login_response = self.fetcher(self.login_url(), deadline=10)
-        login_content = login_response.content
-        login_page = BeautifulSoup(login_content)
-        login_form = login_page.body('form', attrs={'name': 'loginform'})
+        home_page_url = self.base_url() + '/en'
+        logging.info('fetching home page from %s', home_page_url)
+        home_page_content = self.fetcher(home_page_url, deadline=10).content
+        home_page = BeautifulSoup(home_page_content)
+
+        login_url = None
+        for link in home_page.body('a'):
+            if link.string == 'Log in':
+                login_url = link['href']
+                break
+
+        if not login_url:
+            self.raise_login_error("can't find login url on home page")
+
+        logging.info('fetching login page from %s', login_url)
+        login_page_content = self.fetcher(login_url, deadline=10).content
+        login_page = BeautifulSoup(login_page_content)
+
+        login_form = login_page.body('form', attrs={'id': 'loginPageForm'})[0]
+
         if not login_form:
-            raise LoginError(patron=self.card.name, library=self.card.library.name)
+            self.raise_login_error("can't find login form on home page")
 
-        login_url = self.base_url() + login_form[0]['action']
-        logging.debug('found login url: ' + login_url)
+        form_fields = {}
 
-        form_fields = {
-            'user_id': self.card.number,
-            'password': self.card.pin,
-            'submit': 'Login'
-        }
+        for input_field in login_page.findAll(name='input'):
+            if input_field['type'] == 'submit':
+                form_fields['submit'] = input_field['name']
+            else:
+                form_fields[input_field['name']] = input_field.get('value', '')
 
-        login_response = BeautifulSoup(self.fetcher(login_url, form_fields, deadline=10).content)
-        my_account_url = login_response.body(text=lambda(x): x.find('My Account') >= 0)
-        my_account_url = self.base_url() + my_account_url[0].parent['href']
+        form_fields.update({
+            'j_username': self.card.number,
+            'j_password': self.card.pin,
+        })
 
-        logging.debug('found account_response url: ' + my_account_url)
-        return my_account_url
+        submit_login_url = urlparse.urljoin(login_url, login_form['action'])
+        logging.info('submitting login information to %s', submit_login_url)
 
-    def load_account_page(self, my_account_url):
-        account_response = BeautifulSoup(self.fetcher(my_account_url, deadline=10).content)
+        login_response = self.fetcher(submit_login_url, form_fields)
+        login_response_content = login_response.content
 
-        info_path_url = account_response.body(text=lambda(x): x.find('Review My Account') >= 0)
-        info_path_url = info_path_url[0].parent['href']
-        info_path_url = self.base_url() + info_path_url
+        redirect_to_url = re.search("RedirectAfterLogin\('([^']+)'\)", login_response_content)
+        if not redirect_to_url:
+            self.raise_login_error("Can't find redirect. Login failed.")
 
-        logging.debug('found info_path_url: ' + info_path_url)
-        return info_path_url
+        logging.info('redirecting to %s', redirect_to_url.group(1))
+        return redirect_to_url.group(1)
+
+    def raise_login_error(self, message):
+        raise LoginError(
+            patron=self.card.name,
+            library=self.card.library.name,
+            message=message)
 
     def load_info_page(self, info_path_url):
-        info_page_response = BeautifulSoup(self.fetcher(info_path_url, deadline=10).content)
+        self.fetcher(info_path_url, deadline=10).content
 
+    def parse_status(self, hold_row):
+        status = hold_row('td')[3].string
+
+        if status.startswith('Pickup'):
+            return Hold.READY
+
+        rank = hold_row('td')[6].string
+        return int(rank)
+
+    def parse_holds(self, holds_soup):
         holds = []
-        holds_tables = info_page_response.findAll('tbody', id=['tblHold', 'tblAvail'])
-        for holds_table in holds_tables:
-            holds_rows = holds_table.findAll('tr')
-            for row in holds_rows:
-                holds.append(self.parse_hold(row))
+        holds_rows = holds_soup.findAll('tr', {'class': 'pickupHoldsLine'})
+        for row in holds_rows:
+            title = row('td')[2].find('a').string
+            author = row('td')[2].find('p').find(text=True)
+            is_frozen = row('td')[3].string == 'Suspended'
+            pickup = row('td')[4].string
+            rank = int(row('td')[6].string)
 
-        items = self.get_items(info_page_response)
+            logging.debug('%s / %s / %s', title, author, rank)
 
-        return CardStatus(self.card, items, holds)
+            hold = Hold(self.library, self.card)
+            hold.title = title
+            hold.author = author
+            hold.pickup = pickup
+            hold.status = self.parse_status(row)
+            if is_frozen:
+                hold.add_status_note('frozen')
 
-    def get_holds(self):
-        pass
+            holds.append(hold)
 
-    def get_items(self, page):
-        items = []
-        item_due_dates = page.findAll(text=' Due Date ')
-        if item_due_dates:
-            item_rows = [i.parent.parent for i in item_due_dates]
-            items = [self.parse_item(row) for row in item_rows]
-        return items
+        return holds
+
+    def parse_checkouts(self, checkouts_soup):
+        checkouts = []
+
+        checkouts_rows = checkouts_soup.findAll('tr', {'class': 'checkoutsLine'})
+
+        for row in checkouts_rows:
+            title = row('td')[2].find('a').string
+            author = row('td')[2].find('p').find(text=True).strip()
+            due_date = datetime.datetime.strptime(row('td')[4].string, '%m/%d/%y').date()
+
+            logging.debug('%s / %s / %s', title, author, due_date)
+
+            checkout = Item(self.library, self.card)
+            checkout.title = title
+            checkout.author = author
+            checkout.status = due_date
+
+            checkouts.append(checkout)
+
+        return checkouts
 
     def get_status(self):
         my_account_url = self.login()
-        info_path_url = self.load_account_page(my_account_url)
-        return self.load_info_page(info_path_url)
+        self.load_info_page(my_account_url)
 
+        url = urlparse.urljoin(my_account_url, 'account.holds.libraryholdsaccordion?')
+        holds_page_response = self.fetcher(url, method='POST', deadline=10, headers={
+            'Accept': 'text/javascript',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'Origin': 'http://olco.canlib.ca',
+            'Referer': 'http://olco.canlib.ca/client/en_US/rwl/search/account?',
+            }, payload={'t%3Azoneid': 'libraryHoldsAccordion'}).content
 
-def main(args=None):
-    if args is None:
-        args = sys.argv[1:]
-    return 0
+        holds_page_response_json = json.loads(holds_page_response)
 
+        holds_soup = BeautifulSoup(holds_page_response_json['content'])
+        holds = self.parse_holds(holds_soup)
 
-if __name__ == '__main__':
-    sys.exit(main())
+        url = urlparse.urljoin(my_account_url, 'account.checkouts.librarycheckoutsaccordion?')
+        checkouts_page_response = self.fetcher(url, method='POST', deadline=10, headers={
+            'Accept': 'text/javascript',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'Origin': 'http://olco.canlib.ca',
+            'Referer': 'http://olco.canlib.ca/client/en_US/rwl/search/account?',
+            }, payload={'t%3Azoneid': 'libraryCheckoutsAccordion'}).content
+
+        checkouts_page_response_json = json.loads(checkouts_page_response)
+
+        checkouts_soup = BeautifulSoup(checkouts_page_response_json['content'])
+        checkouts = self.parse_checkouts(checkouts_soup)
+
+        return CardStatus(self.card, checkouts, holds)
