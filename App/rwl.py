@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-import sys
+import datetime
 import logging
 import json
 import re
 import urlparse
 from BeautifulSoup import BeautifulSoup
-from data import Hold, LoginError, CardInfo, CardStatus
+from data import Hold, Item, LoginError, CardStatus
 
 
 class LibraryAccount:
@@ -110,6 +110,27 @@ class LibraryAccount:
 
         return holds
 
+    def parse_checkouts(self, checkouts_soup):
+        checkouts = []
+
+        checkouts_rows = checkouts_soup.findAll('tr', {'class': 'checkoutsLine'})
+
+        for row in checkouts_rows:
+            title = row('td')[2].find('a').string
+            author = row('td')[2].find('p').find(text=True).strip()
+            due_date = datetime.datetime.strptime(row('td')[4].string, '%m/%d/%y').date()
+
+            logging.debug('%s / %s / %s', title, author, due_date)
+
+            checkout = Item(self.library, self.card)
+            checkout.title = title
+            checkout.author = author
+            checkout.status = due_date
+
+            checkouts.append(checkout)
+
+        return checkouts
+
     def get_status(self):
         my_account_url = self.login()
         self.load_info_page(my_account_url)
@@ -128,17 +149,18 @@ class LibraryAccount:
         holds_soup = BeautifulSoup(holds_page_response_json['content'])
         holds = self.parse_holds(holds_soup)
 
-        card_status = CardStatus(self.card, [], holds)
-        card_status.info.append(CardInfo(self.card.library.name, self.card.name,
-                                         "RWL card-checking only handles holds for now, and is pretty rudimentary."))
-        return card_status
+        url = urlparse.urljoin(my_account_url, 'account.checkouts.librarycheckoutsaccordion?')
+        checkouts_page_response = self.fetcher(url, method='POST', deadline=10, headers={
+            'Accept': 'text/javascript',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'Origin': 'http://olco.canlib.ca',
+            'Referer': 'http://olco.canlib.ca/client/en_US/rwl/search/account?',
+            }, payload={'t%3Azoneid': 'libraryCheckoutsAccordion'}).content
 
+        checkouts_page_response_json = json.loads(checkouts_page_response)
 
-def main(args=None):
-    if args is None:
-        args = sys.argv[1:]
-    return 0
+        checkouts_soup = BeautifulSoup(checkouts_page_response_json['content'])
+        checkouts = self.parse_checkouts(checkouts_soup)
 
-
-if __name__ == '__main__':
-    sys.exit(main())
+        return CardStatus(self.card, checkouts, holds)

@@ -174,3 +174,107 @@ def test__parse_holds():
     preschool_songs_hold = holds[2]
     assert 'Preschool songs [DVD]' == preschool_songs_hold.title
     assert Hold.READY == preschool_songs_hold.status
+
+
+def test__parse_checkouts():
+    response = BeautifulSoup('''<table id='myCheckouts_checkoutslist_table' class='checkoutsList sortable'>
+  <thead>
+    <tr class='checkoutsHeader'>
+      <th colspan='1' rowspan='1' class='checkoutsAlert'>
+      </th>
+      <th colspan='1' rowspan='1' class='checkoutsCoverArtHeader sorttable_nosort'>
+      </th>
+      <th colspan='1' rowspan='1' class='checkoutsBookInfo sorttable_alpha'>
+        <div class='myAccountHeader_div'>Title / Author</div>
+      </th>
+      <th colspan='1' rowspan='1' class='checkoutsRenewCountHeader sorttable_numeric'>
+        <div class='myAccountHeader_div'>Times Renewed</div>
+      </th>
+      <th colspan='1' rowspan='1' class='checkoutsDueDateHeader'>
+        <div class='myAccountHeader_div'>Date Due</div>
+      </th>
+    </tr>
+  </thead>
+  <tr class='checkoutsLine'>
+    <td colspan='1' rowspan='1' sorttable_customkey='1' class='checkoutsAlert'>
+    </td>
+    <td colspan='1' rowspan='1' class='checkoutsCoverArt'>
+      <input title='Select Grown ups 2 [DVD].' tabIndex='64' disabled='true' class='disabledCheckoutsCheckbox'
+             type='checkbox'></input>
+      <div id='checkoutInitialCover_36501005741892' class='myAccountCoverArt'>
+        <img id='checkoutsImage_1' title='Cover image for Grown ups 2 [DVD]' alt='Cover image for Grown ups 2 [DVD]'
+             class='accountCoverImage' src='/client/assets/fb929a4729483177/ctx/images/no_image.png'/>
+        <div title='Cover image for Grown ups 2 [DVD]' class='no_image_text'
+             id='checkoutsImage_1Title'>Grown ups 2 [DVD]</div>
+      </div>
+    </td>
+    <td colspan='1' rowspan='1' class='checkoutsBookInfo'>
+      <div id='checkoutTitleLinkDiv_36501005741892'>
+        <div>
+          <div class='detailPanel' id='detailPanel0'>
+            <div class='t-zone' id='detailZone0'>
+            </div>
+          </div>
+          <a shape='rect' TABINDEX='65' title='Grown ups 2 [DVD]' href='#'
+             zoneId='detailZone0' class='hideIE' id='detailClick'>Grown ups 2 [DVD]</a>
+        </div>
+      </div>
+      <p class='authBreak'>
+        Rock, Chris.
+        <br/>
+        <span>36501005741892</span>
+        <br/>
+        <span class='checkoutsError'>Renewal limit reached: This item cannot be renewed.</span>
+      </p>
+    </td>
+    <td colspan='1' rowspan='1' class='checkoutsRenewCount'>0</td>
+    <td colspan='1' rowspan='1' class='checkoutsDueDate'>5/21/15</td>
+  </tr>
+  <tr class='checkoutsLine'>
+    <td colspan='1' rowspan='1' sorttable_customkey='1' class='checkoutsAlert'>
+    </td>
+    <td colspan='1' rowspan='1' class='checkoutsCoverArt'>
+      <input title='Select When Harry met Sally [DVD].' tabIndex='66' class='checkoutsCheckbox'
+             id='checkbox_14d5745aeb1' name='checkbox' type='checkbox'></input>
+      <img id='checkbox_14d5745aeb1_icon' class='t-error-icon t-invisible' alt=''
+           src='/client/assets/fb929a4729483177/core/spacer.gif'/>
+      <div id='checkoutInitialCover_36501003956724' class='myAccountCoverArt'>
+        <img id='checkoutsImage_2' title='Cover image for When Harry met Sally [DVD]'
+             alt='Cover image for When Harry met Sally [DVD]' class='accountCoverImage'
+             src='/client/assets/fb929a4729483177/ctx/images/no_image.png'/>
+        <div title='Cover image for When Harry met Sally [DVD]' class='no_image_text'
+             id='checkoutsImage_2Title'>When Harry met Sally [DVD]</div>
+      </div>
+    </td>
+    <td colspan='1' rowspan='1' class='checkoutsBookInfo'>
+      <div id='checkoutTitleLinkDiv_36501003956724'>
+        <div>
+          <div class='detailPanel' id='detailPanel1'>
+            <div class='t-zone' id='detailZone1'>
+            </div>
+          </div>
+          <a shape='rect' TABINDEX='67' title='When Harry met Sally [DVD]' href='#' zoneId='detailZone1'
+             class='hideIE' id='detailClick_0'>When Harry met Sally [DVD]</a>
+        </div>
+      </div>
+      <p class='authBreak'>
+        Reiner, Rob.
+        <br/>
+        <span>36501003956724</span>
+        <br/>
+        <span class='checkoutsRenewed'>
+        </span>
+      </p>
+    </td>
+    <td colspan='1' rowspan='1' class='checkoutsRenewCount'>0</td>
+    <td colspan='1' rowspan='1' class='checkoutsDueDate'>6/4/15</td>
+  </tr>
+</table>''')
+
+    lib = rwl.LibraryAccount(MyCard(), MyOpener())
+    checkouts = lib.parse_checkouts(response)
+
+    grown_ups_checkout = checkouts[0]
+    assert 'Grown ups 2 [DVD]' == grown_ups_checkout.title
+    assert 'Rock, Chris.' == grown_ups_checkout.author
+    assert datetime.date(2015, 5, 21) == grown_ups_checkout.status
