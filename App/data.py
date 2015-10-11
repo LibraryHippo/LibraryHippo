@@ -56,14 +56,20 @@ class Hold(Thing):
         self.expires = datetime.date.max
 
     def sortkey(self):
-        if self.status in Hold.special_sortkeys:
-            key = Hold.special_sortkeys[self.status]
-        elif isinstance(self.status, tuple):
-            key = '%04d' % self.status[0]
-        elif isinstance(self.status, int):
-            key = '%04d' % self.status
+        if 'frozen' in self.status_notes:
+            key = 'b '
         else:
-            key = ' ' + str(self.status)
+            key = 'a'
+
+        if self.status in Hold.special_sortkeys:
+            key += Hold.special_sortkeys[self.status]
+        elif isinstance(self.status, tuple):
+            key += '%04d' % self.status[0]
+        elif isinstance(self.status, int):
+            key += '%04d' % self.status
+        else:
+            key += ' ' + str(self.status)
+
         return key + ' ' + self.title
 
     def status_text(self):
