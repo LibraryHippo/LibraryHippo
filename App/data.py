@@ -56,7 +56,7 @@ class Hold(Thing):
         self.expires = datetime.date.max
 
     def sortkey(self):
-        if 'frozen' in self.status_notes:
+        if self.is_frozen():
             key = 'b '
         else:
             key = 'a'
@@ -77,6 +77,12 @@ class Hold(Thing):
             return '%d of %d' % self.status
         else:
             return self.status
+
+    def is_frozen(self):
+        return 'frozen' in self.status_notes
+
+    def freeze(self):
+        self.add_status_note('frozen')
 
 
 class Item(Thing):

@@ -104,7 +104,7 @@ class LibraryAccount:
             hold.pickup = pickup
             hold.status = self.parse_status(row)
             if is_frozen:
-                hold.add_status_note('frozen')
+                hold.freeze()
 
             holds.append(hold)
 

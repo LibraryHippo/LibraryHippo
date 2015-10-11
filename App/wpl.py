@@ -201,7 +201,7 @@ class LibraryAccount:
                 elif column_name == 'FREEZE':
                     try:
                         if parse_hold_frozen(cell):
-                            entry.add_status_note('frozen')
+                            entry.freeze()
                     except:
                         # frozen info isn't critical - ignore
                         logging.warn('error getting frozen info', exc_info=True)

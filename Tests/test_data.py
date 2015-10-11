@@ -61,7 +61,7 @@ def test__holds_sort__holds_with_integer_status_some_frozen__frozen_sorts_last()
     holds[0].status = 1
     holds[1].status = 3
     holds[2].status = 2
-    holds[2].add_status_note('frozen')
+    holds[2].freeze()
     for i in range(len(holds)):
         holds[i].title = chr(i + ord('A'))
     holds.sort()
