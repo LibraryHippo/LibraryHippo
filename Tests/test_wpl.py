@@ -150,7 +150,7 @@ def test__parse_holds___frozen__added_to_status_notes():
         </table>''')
 
     w = wpl.LibraryAccount(MyCard(), MyOpener())
-    assert ['frozen'] == w.parse_holds(response)[0].status_notes
+    assert w.parse_holds(response)[0].is_frozen()
 
 
 def test__parse_holds___empty_freeze_field__is_not_frozen():
@@ -161,7 +161,7 @@ def test__parse_holds___empty_freeze_field__is_not_frozen():
         </table>''')
 
     w = wpl.LibraryAccount(MyCard(), MyOpener())
-    assert 'frozen' not in w.parse_holds(response)[0].status_notes
+    assert not w.parse_holds(response)[0].is_frozen()
 
 
 def test__parse_holds___hold_for_waterloo__finds_correct_url():

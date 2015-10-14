@@ -166,7 +166,7 @@ def test__parse_holds():
     assert 1 == wiggly_world_hold.status
     assert datetime.date.max == wiggly_world_hold.expires
     assert 'Baden Branch Library' == wiggly_world_hold.pickup
-    assert ['frozen'] == wiggly_world_hold.status_notes
+    assert wiggly_world_hold.is_frozen()
 
     big_hero_hold = holds[1]
     assert [] == big_hero_hold.status_notes

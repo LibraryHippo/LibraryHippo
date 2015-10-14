@@ -50,6 +50,24 @@ def test__holds_sort__rwl_holds_with_integer_status__sorted_by_status():
     assert ['B', 'C', 'A'] == [h.title for h in holds]
 
 
+def test__holds_sort__holds_with_integer_status_some_frozen__frozen_sorts_last():
+    l = MyLibrary()
+    c = MyCard()
+    holds = [
+        Hold(l, c),
+        Hold(l, c),
+        Hold(l, c)
+    ]
+    holds[0].status = 1
+    holds[1].status = 3
+    holds[2].status = 2
+    holds[2].freeze()
+    for i in range(len(holds)):
+        holds[i].title = chr(i + ord('A'))
+    holds.sort()
+    assert ['A', 'B', 'C'] == [h.title for h in holds]
+
+
 def test__holds_sort__mixed_rwl_wpl_holds__sort_okay():
     l = MyLibrary()
     c = MyCard()
