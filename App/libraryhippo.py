@@ -530,7 +530,7 @@ class ControlPanel(MyHandler):
         if os.environ['SERVER_SOFTWARE'].startswith('Development'):
             dashboard = 'http://localhost:8000/datastore'
         else:
-            dashboard = 'https://console.developers.google.com/project/libraryhippo27'
+            dashboard = 'https://console.cloud.google.com/home/dashboard?project=libraryhippo27'
 
         self.template_values = {'dashboard': dashboard}
         self.render('controlpanel.html')
