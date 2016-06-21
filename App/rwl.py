@@ -27,7 +27,7 @@ class LibraryAccount:
         login_url = None
         for link in home_page.body('a'):
             if link.string == 'Log in':
-                login_url = link['href']
+                login_url = link['href'].strip()
                 break
 
         if not login_url:
