@@ -1,7 +1,7 @@
 import sys
 import flake8.main
 
-sys.argv = ['check', '--max-line-length=120', '--exclude=BeautifulSoup.py,authomatic', '.']
+sys.argv = ['check', '--max-line-length=120', '--exclude=BeautifulSoup.py,authomatic,lib', '.']
 
 
 def test_syntax():
