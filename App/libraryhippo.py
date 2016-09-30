@@ -53,7 +53,7 @@ class MyHandler(webapp2.RequestHandler):
             if hasattr(self.request, attr):
                 message_body += '\n' + attr + ': ' + str(getattr(self.request, attr))
 
-        send_email('librarianhippo@gmail.com',
+        send_email(['librarianhippo@gmail.com'],
                    'LibraryHippo Error ' + str(error_uid),
                    body=message_body)
 
@@ -232,7 +232,7 @@ class RemoveResponsible(MyHandler):
         for principal_email in self.request.arguments():
             principal = users.User(principal_email)
             if principal in family.principals:
-                send_email(principal_email,
+                send_email([principal_email],
                            'LibraryHippo: you are no longer a responsible person for the ' + family.name + ' family',
                            body=user.email() + ' has removed you from being a responsible person for the ' +
                            family.name + 'family at LibraryHippo (http://libraryhippo.com)')
@@ -259,7 +259,7 @@ class SaveFamily(MyHandler):
         (user, family) = self.get_family()
         if not family:
             family = data.Family()
-            send_email('librarianhippo@gmail.com',
+            send_email(['librarianhippo@gmail.com'],
                        'New family ' + self.request.get('name') + ' registered',
                        body=('registered to ' + str(user)))
 
@@ -289,7 +289,7 @@ class AddResponsible(MyHandler):
                 self.render('info.html')
                 return
             else:
-                send_email(new_principal.email(),
+                send_email([new_principal.email()],
                            'LibraryHippo: you are now a responsible person for the ' + family.name + ' family',
                            body=user.email() + ' has made you a responsible person for the ' + family.name +
                            ' family.\nLearn more by visiting LibraryHippo at http://libraryhippo.com')
@@ -482,9 +482,12 @@ class AdminNotify(MyHandler):
                                                    template_values['holds_ready'])
 
         if subject:
+            bccs = []
+            if template_values['error']:
+                bccs = ['librarianhippo@gmail.com']
             send_email([a.email() for a in family.principals],
                        subject,
-                       bcc=template_values['error'] and 'librarianhippo@gmail.com',
+                       bccs=bccs,
                        html=self.jinja.render_template('email.html', **template_values))
 
 

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 
+import sys
+
+
 def webapp_add_wsgi_middleware(app):
     from google.appengine.ext.appstats import recording
     app = recording.appstats_wsgi_middleware(app)
@@ -15,3 +18,6 @@ appstats_TZOFFSET = 0
 # the web UI when an exception occurs.  (Tracebacks are always logged
 # at the ERROR level as well.)
 appstats_DEBUG = False
+
+# Add any libraries installed in the "lib" folder.
+sys.path.append('lib')
