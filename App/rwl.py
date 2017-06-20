@@ -16,7 +16,7 @@ class LibraryAccount:
         self.fetcher = fetcher
 
     def base_url(self):
-        return 'http://www.rwlibrary.ca'
+        return 'https://www.rwlibrary.ca'
 
     def login(self):
         home_page_url = self.base_url() + '/en'
@@ -25,10 +25,9 @@ class LibraryAccount:
         home_page = BeautifulSoup(home_page_content)
 
         login_url = None
-        for link in home_page.body('a'):
-            if link.string == 'Log in':
-                login_url = link['href'].strip()
-                break
+        login_anchor = home_page.body.find('a', attrs={'id': 'myAccount'})
+        if login_anchor:
+            login_url = login_anchor['href'].strip()
 
         if not login_url:
             self.raise_login_error("can't find login url on home page")
@@ -40,7 +39,7 @@ class LibraryAccount:
         login_form = login_page.body('form', attrs={'id': 'loginPageForm'})[0]
 
         if not login_form:
-            self.raise_login_error("can't find login form on home page")
+            self.raise_login_error("can't find login form on login page")
 
         form_fields = {}
 
