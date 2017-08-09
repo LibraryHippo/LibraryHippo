@@ -1,3 +1,5 @@
 *.pyc
 *.bak
 /App/config.py
+/.cache
+/.vscode
