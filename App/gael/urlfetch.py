@@ -6,6 +6,7 @@ CookieHandler and RedirectFollower use code taken from Scott Hillman's URLOpener
 '''
 
 import Cookie
+import logging
 import urllib
 import urlparse
 import datetime
@@ -145,3 +146,21 @@ class Transcriber(BaseWrapper):
   status_code = %(status_code)d
   headers = %(headers)s
   content = %(content)s''' % self.values
+
+
+class Securer(BaseWrapper):
+    '''A fetcher that upgrades http requests to https.'''
+    def __call__(self, url,
+                 payload=None, method='GET', headers={}, allow_truncated=False, follow_redirects=True, deadline=None):
+        '''Fetch, upgrading http to https
+        '''
+        url_parts = urlparse.urlparse(url)
+        if url_parts.scheme == 'http':
+            original_url = url
+            netloc = url_parts.netloc
+            if netloc.endswith(':80'):
+                netloc = netloc[:-3]
+            url = urlparse.urlunparse(('https', netloc) + url_parts[2:])
+
+            logging.debug('replacing URL [%s] with [%s]', original_url, url)
+        return self.fetcher(url, payload, method, headers, allow_truncated, follow_redirects, deadline)
