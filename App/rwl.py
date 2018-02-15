@@ -19,7 +19,7 @@ class LibraryAccount:
         return 'https://www.rwlibrary.ca'
 
     def login(self):
-        home_page_url = self.base_url() + '/en'
+        home_page_url = self.base_url() + '/en/'
         logging.info('fetching home page from %s', home_page_url)
         home_page_content = self.fetcher(home_page_url, deadline=10).content
         home_page = BeautifulSoup(home_page_content)
