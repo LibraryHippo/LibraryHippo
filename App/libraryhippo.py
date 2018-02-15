@@ -20,7 +20,7 @@ from app_engine_util import send_email
 import utils
 import utils.times
 import utils.filters
-from gael.urlfetch import Transcriber, PayloadEncoder, RedirectFollower, CookieHandler
+from gael.urlfetch import Transcriber, PayloadEncoder, RedirectFollower, CookieHandler, Securer
 
 from authomatic import Authomatic
 from authomatic.adapters import Webapp2Adapter
@@ -405,7 +405,7 @@ class Summary(MyHandler):
 
 class CheckCardBase(MyHandler):
     def check_card(self, user, card):
-        fetcher = Transcriber(PayloadEncoder(RedirectFollower(CookieHandler(urlfetch.fetch))))
+        fetcher = PayloadEncoder(RedirectFollower(CookieHandler(Securer(Transcriber(urlfetch.fetch)))))
 
         checker = CardChecker()
         try:
