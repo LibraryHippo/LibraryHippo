@@ -2,4 +2,5 @@
 *.bak
 /App/config.py
 /.cache
+/.pytest_cache
 /.vscode

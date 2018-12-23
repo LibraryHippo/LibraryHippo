@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import pytest
 import py.test
 import datetime
 
@@ -46,24 +47,20 @@ def test__parse_holds__author_with_slash__reads_author():
     assert ('Bo/o!') == hold.author
 
 
-def test__parse_holds__named_position__parses_position():
-    def check(expected, hold_text):
-        print 'expected =', expected, 'hold_text =', hold_text
-        response = BeautifulSoup(
-            '''<table>
-            <tr class="patFuncHeaders"><th>STATUS</th></tr>
-            <tr><td> %s </td></tr>
-            </table>''' % hold_text)
-        w = wpl.LibraryAccount(MyCard(), MyOpener())
-        assert expected == w.parse_holds(response)[0].status
-
-    for text, status in (
+@pytest.mark.parametrize("hold_text,expected_status", [
         ('Ready.', Hold.READY),
         ('IN TRANSIT', Hold.IN_TRANSIT),
         ('CHECK SHELVES', Hold.CHECK_SHELVES),
         ('TRACE', Hold.DELAYED),
-    ):
-        yield check, status, text
+])
+def test__parse_holds__named_position__parses_position(hold_text, expected_status):
+    response = BeautifulSoup(
+        '''<table>
+        <tr class="patFuncHeaders"><th>STATUS</th></tr>
+        <tr><td> %s </td></tr>
+        </table>''' % hold_text)
+    w = wpl.LibraryAccount(MyCard(), MyOpener())
+    assert expected_status == w.parse_holds(response)[0].status
 
 
 hold_with_pickup_dropdown = '''<table lang="en" class="patFunc"><tr class="patFuncTitle">

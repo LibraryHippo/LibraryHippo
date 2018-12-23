@@ -11,6 +11,8 @@ from data import Item
 from data import CardInfo
 from data import CardStatus
 
+import pytest
+
 import gael.testing
 gael.testing.add_appsever_import_paths()
 
@@ -21,17 +23,20 @@ def setup_module(module):
     libraryhippo.clock = StoppedClock(datetime.datetime(2010, 2, 1))
 
 
-def pytest_funcarg__card(request):
+@pytest.fixture
+def card():
     """Sort of like setup - will provide a card argument to tests that want it"""
     return MyCard()
 
 
-def pytest_funcarg__library(request):
+@pytest.fixture
+def library():
     """Sort of like setup - will provide a library argument to tests that want it"""
     return MyLibrary()
 
 
-def pytest_funcarg__status(request):
+@pytest.fixture
+def status(request):
     """Sort of like setup - will provide a status argument to tests that want it"""
     card = request.getfuncargvalue('card')
     return CardStatus(card)
