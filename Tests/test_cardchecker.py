@@ -8,7 +8,7 @@ import google.appengine.runtime 		 	# NOQA
 import google.appengine.runtime.apiproxy_errors 	# NOQA
 import google.appengine.api.urlfetch 		 	# NOQA
 
-import cardchecker
+import cardchecker  # noqa E402 module level import not at top of file
 
 
 @pytest.mark.parametrize("error,expected", [

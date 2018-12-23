@@ -22,6 +22,6 @@ class ObjectProperty(db.BlobProperty):
     def make_value_from_datastore(self, value):
         try:
             value = pickle.loads(str(value))
-        except:
+        except:  # noqa E722 - there are many exceptions that can be thrown
             pass
         return super(ObjectProperty, self).make_value_from_datastore(value)

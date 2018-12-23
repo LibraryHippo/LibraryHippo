@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-import gael.testing
-gael.testing.add_appsever_import_paths()
-
 import BeautifulSoup
+import pytest
 import utils
 import utils.soup
 
@@ -33,16 +31,13 @@ def test__build_notification__one_item_due_and_two_holds_ready__subject_says_1_i
     assert '1 Item Due and 2 Holds Ready' == subject
 
 
-def test__pluralize__default_subject__adds_s_or_not():
-    def check(count, ending):
-        assert ending == utils.pluralize([None] * count)
-
-    for count, ending in (
-        (0, 's'),
-        (1, ''),
-        (2, 's'),
-    ):
-        yield 'pluralize_%d_with_default_suffix' % count, check, count, ending
+@pytest.mark.parametrize("count,expected_ending", [
+    (0, 's'),
+    (1, ''),
+    (2, 's'),
+])
+def test__pluralize__default_subject__adds_s_or_not(count, expected_ending):
+    assert expected_ending == utils.pluralize([None] * count)
 
 
 def test__soup_remove_comments__comments_present__removes_comments():

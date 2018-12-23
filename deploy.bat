@@ -4,7 +4,7 @@ call check_python.bat
 
 IF %ERRORLEVEL% NEQ 0 GOTO FLAKE_ERRORS
 
-appcfg update App
+gcloud app deploy --project libraryhippo27 --quiet App
 
 GOTO END
 

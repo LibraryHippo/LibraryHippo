@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+import datetime
+import data
+import fakes
+
 import gael.testing
 gael.testing.add_appsever_import_paths()
 
-import datetime
-import libraryhippo
-import data
-import fakes
+import libraryhippo  # noqa E402 - module level import not at top of file
 
 
 class Family(object):

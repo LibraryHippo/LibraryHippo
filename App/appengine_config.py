@@ -9,6 +9,7 @@ def webapp_add_wsgi_middleware(app):
     app = recording.appstats_wsgi_middleware(app)
     return app
 
+
 # Timezone offset.  This is used to convert recorded times (which are
 # all in UTC) to local time.
 appstats_TZOFFSET = 0

@@ -5,9 +5,6 @@ import datetime
 from fakes import MyCard
 from fakes import MyLibrary
 
-import gael.testing
-gael.testing.add_appsever_import_paths()
-
 from data import Hold
 from data import Item
 from data import CardInfo
@@ -15,12 +12,12 @@ from data import CardStatus
 
 
 def test__holds_sort__all_ready__sorted_by_title():
-    l = MyLibrary()
+    library = MyLibrary()
     c = MyCard()
     holds = [
-        Hold(l, c),
-        Hold(l, c),
-        Hold(l, c)
+        Hold(library, c),
+        Hold(library, c),
+        Hold(library, c)
     ]
     holds[0].status = Hold.READY
     holds[0].title = 'B'
@@ -34,12 +31,12 @@ def test__holds_sort__all_ready__sorted_by_title():
 
 
 def test__holds_sort__rwl_holds_with_integer_status__sorted_by_status():
-    l = MyLibrary()
+    library = MyLibrary()
     c = MyCard()
     holds = [
-        Hold(l, c),
-        Hold(l, c),
-        Hold(l, c)
+        Hold(library, c),
+        Hold(library, c),
+        Hold(library, c)
     ]
     holds[0].status = 15
     holds[1].status = 2
@@ -51,12 +48,12 @@ def test__holds_sort__rwl_holds_with_integer_status__sorted_by_status():
 
 
 def test__holds_sort__holds_with_integer_status_some_frozen__frozen_sorts_last():
-    l = MyLibrary()
+    library = MyLibrary()
     c = MyCard()
     holds = [
-        Hold(l, c),
-        Hold(l, c),
-        Hold(l, c)
+        Hold(library, c),
+        Hold(library, c),
+        Hold(library, c)
     ]
     holds[0].status = 1
     holds[1].status = 3
@@ -69,13 +66,13 @@ def test__holds_sort__holds_with_integer_status_some_frozen__frozen_sorts_last()
 
 
 def test__holds_sort__mixed_rwl_wpl_holds__sort_okay():
-    l = MyLibrary()
+    library = MyLibrary()
     c = MyCard()
     holds = [
-        Hold(l, c),
-        Hold(l, c),
-        Hold(l, c),
-        Hold(l, c)
+        Hold(library, c),
+        Hold(library, c),
+        Hold(library, c),
+        Hold(library, c)
     ]
     holds[0].status = 15
     holds[1].status = (2, 9)
@@ -88,12 +85,12 @@ def test__holds_sort__mixed_rwl_wpl_holds__sort_okay():
 
 
 def test__items_sort__same_date__sorted_by_name():
-    l = MyLibrary()
+    library = MyLibrary()
     c = MyCard()
     items = [
-        Item(l, c),
-        Item(l, c),
-        Item(l, c)
+        Item(library, c),
+        Item(library, c),
+        Item(library, c)
     ]
     items[0].status = datetime.date(2009, 9, 7)
     items[0].title = 'B'
@@ -107,12 +104,12 @@ def test__items_sort__same_date__sorted_by_name():
 
 
 def test__holds_sort__delayed_hold__sorts_last():
-    l = MyLibrary()
+    library = MyLibrary()
     c = MyCard()
     holds = [
-        Hold(l, c),
-        Hold(l, c),
-        Hold(l, c)
+        Hold(library, c),
+        Hold(library, c),
+        Hold(library, c)
     ]
     holds[0].title = 'A'
     holds[0].status = 15

@@ -154,7 +154,7 @@ class LibraryAccount:
         finally:
             try:
                 self.logout()
-            except:
+            except: # noqa E722 - do not use bare except
                 logging.error('unable to log out', exc_info=True)
 
         status = CardStatus(self.card, items, holds)
@@ -194,7 +194,7 @@ class LibraryAccount:
                 elif column_name == 'CANCEL IF NOT FILLED BY':
                     try:
                         entry.expires = parse_hold_expires(cell)
-                    except:
+                    except: # noqa E722 - do not use bare except
                         # expiration info isn't critical - ignore
                         pass
 
@@ -202,7 +202,7 @@ class LibraryAccount:
                     try:
                         if parse_hold_frozen(cell):
                             entry.freeze()
-                    except:
+                    except: # noqa E722 - do not use bare except
                         # frozen info isn't critical - ignore
                         logging.warn('error getting frozen info', exc_info=True)
                         pass

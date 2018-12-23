@@ -46,7 +46,7 @@ def test__redirect_follower__absolute_redirect__follows():
     assert 'my content2' == response.content
     assert 'http://bing.com' == wrapped_fetcher.last_request['url']
     assert 'GET' == wrapped_fetcher.last_request['method']
-    assert None == wrapped_fetcher.last_request['payload']
+    assert wrapped_fetcher.last_request['payload'] is None
 
 
 def test__redirect_follower__relative_redirect__follows():
@@ -74,7 +74,7 @@ def test__redirect_follower__turns_off_follow_redirects():
     fetcher = RedirectFollower(wrapped_fetcher)
     fetcher('http://123.com/', 'hippo')
 
-    assert False == wrapped_fetcher.last_request['follow_redirects']
+    assert not wrapped_fetcher.last_request['follow_redirects']
 
 
 def pytest_generate_tests(metafunc):
@@ -100,8 +100,8 @@ def test__decorator__keyword_parameters__passed_along(decorator):
 
     assert 'PUT' == wrapped_fetcher.last_request['method']
     assert wrapped_fetcher.last_request['payload'] is None
-    assert False == wrapped_fetcher.last_request['follow_redirects']
-    assert True == wrapped_fetcher.last_request['allow_truncated']
+    assert not wrapped_fetcher.last_request['follow_redirects']
+    assert wrapped_fetcher.last_request['allow_truncated']
     assert 7 == wrapped_fetcher.last_request['deadline']
 
 
@@ -111,7 +111,7 @@ def test__payloadencoder__no_payload__none_sent():
     fetcher = PayloadEncoder(wrapped_fetcher)
     fetcher('http://123.com/')
 
-    assert None == wrapped_fetcher.last_request['payload']
+    assert wrapped_fetcher.last_request['payload'] is None
 
 
 def test__payloadencoder__dict_payload__encoded_before_request():
