@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 
 import datetime
-
-import gael.testing
-gael.testing.add_appsever_import_paths()
-
 import utils.filters
 
 

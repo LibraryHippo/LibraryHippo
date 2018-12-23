@@ -6,15 +6,15 @@ from fakes import MyCard
 from fakes import MyLibrary
 from fakes import StoppedClock
 
-import gael.testing
-gael.testing.add_appsever_import_paths()
-
 from data import Hold
 from data import Item
 from data import CardInfo
 from data import CardStatus
 
-import libraryhippo
+import gael.testing
+gael.testing.add_appsever_import_paths()
+
+import libraryhippo  # noqa E402 - module level import not at top of file
 
 
 def setup_module(module):

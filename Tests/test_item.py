@@ -2,9 +2,6 @@
 
 import datetime
 
-import gael.testing
-gael.testing.add_appsever_import_paths()
-
 from data import Item
 from fakes import MyCard, MyLibrary
 

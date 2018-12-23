@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-import gael.testing
-gael.testing.add_appsever_import_paths()
-
 from datetime import datetime, timedelta
 from utils.times import WaterlooTimeZone
 

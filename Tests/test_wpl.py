@@ -3,9 +3,6 @@
 import py.test
 import datetime
 
-import gael.testing
-gael.testing.add_appsever_import_paths()
-
 from BeautifulSoup import BeautifulSoup
 import wpl
 import kpl
@@ -68,6 +65,7 @@ def test__parse_holds__named_position__parses_position():
     ):
         yield check, status, text
 
+
 hold_with_pickup_dropdown = '''<table lang="en" class="patFunc"><tr class="patFuncTitle">
 <th colspan="6" class="patFuncTitle">
 6 HOLDS
@@ -120,7 +118,7 @@ def test__parse_holds___pickup_dropdown__pickup_is_string():
     '''makes for better pickling'''
     response = BeautifulSoup(hold_with_pickup_dropdown)
     w = wpl.LibraryAccount(MyCard(), MyOpener())
-    assert str == type(w.parse_holds(response)[0].pickup)
+    assert str == type(w.parse_holds(response)[0].pickup)  # noqa: E721 - need to check exact type
 
 
 def test__parse_holds___with_expiration_date__reads_expiration():

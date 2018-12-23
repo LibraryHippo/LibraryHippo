@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-import gael.testing
-gael.testing.add_appsever_import_paths()
-
 from data import Hold
 from fakes import MyCard, MyLibrary
 

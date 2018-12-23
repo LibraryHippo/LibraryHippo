@@ -40,7 +40,7 @@ class CardChecker:
 
             self.save_checked_card(library_account.card, card_status)
 
-        except:
+        except:  # noqa E722 - do not use bare except
             e = data.CardCheckFailed.for_card(library_account.card, user=user)
             logging.info('event = ' + str(e.__dict__))
             e.put()
@@ -74,5 +74,6 @@ class CardChecker:
             checked_card.payload = card_status
             checked_card.datetime = clock.utcnow()
             checked_card.put()
-        except:
-            logging.error('Failed to save checked card. Continuing.', exc_info=True)
+        except:  # noqa E722 - do not use bare except
+            logging.error(
+                'Failed to save checked card. Continuing.', exc_info=True)
