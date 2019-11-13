@@ -83,9 +83,7 @@
 
       function uses_pin(library_id)
       {
-        {% for library in libraries %}
-            {% if library.type == 'rwl' %}return library_id == '{{ library.key() }}';{% endif %}
-        {% endfor %}
+        return true;
       }
 
       function update_pin_field_visibility()

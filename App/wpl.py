@@ -91,6 +91,7 @@ class LibraryAccount:
         form_fields.update({
             'name': self.card.name,
             'code': self.card.number,
+            'pin': self.card.pin,
         })
 
         response = self.fetcher(self.login_url(), form_fields)
