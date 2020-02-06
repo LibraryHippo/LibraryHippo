@@ -7,3 +7,9 @@ from invoke import task
 def run(c):
     """Run local version of the application"""
     c.run("flask run")
+
+
+@task
+def deploy(c):
+    """Deploy the application to Heroku"""
+    c.run("git push heroku lh2020:master")
