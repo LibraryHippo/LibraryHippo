@@ -1,6 +1,4 @@
-*.pyc
-*.bak
-/App/config.py
-/.cache
-/.pytest_cache
-/.vscode
+/venv/
+
+__pycache__/
+.pytest_cache/
