@@ -12,7 +12,7 @@ def run(c):
 @task
 def deploy(c):
     """Deploy the application to Heroku"""
-    c.run("git push heroku lh2020:master")
+    c.run("git push --force-with-lease heroku HEAD:master")
 
 
 @task
