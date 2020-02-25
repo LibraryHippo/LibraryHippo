@@ -26,7 +26,7 @@ class WPL:
             self.login_url(),
             summary_page.find(name="a", href=re.compile("/holds$"))["href"],
         )
-        items_url = urllib.parse.urljoin(
+        checkouts_url = urllib.parse.urljoin(
             self.login_url(),
             summary_page.find(name="a", href=re.compile("/items$"))["href"],
         )
@@ -38,17 +38,24 @@ class WPL:
                 result += f"<dt>{k}</dt><dd>{v}</dd>"
             result += "</dl><hr>"
 
+        result += "<h1>Checkouts</h1>"
+        for checkout in self.get_checkouts(session, checkouts_url):
+            result += "<dl>"
+            for k, v in checkout.items():
+                result += f"<dt>{k}</dt><dd>{v}</dd>"
+            result += "</dl><hr>"
+
         return result
 
     def login(self, session, patron, number, pin):
         initial_login_page_view = session.get(self.login_url())
-        login_page = BeautifulSoup(initial_login_page_view.text, "html.parser")
+        login_page = BeautifulSoup(initial_login_page_view.text, "lxml")
 
         form_fields = self.get_form_fields(login_page)
         form_fields.update({"name": patron, "code": number, "pin": pin})
 
         login_response = session.post(self.login_url(), form_fields)
-        return BeautifulSoup(login_response.text, "html.parser")
+        return BeautifulSoup(login_response.text, "lxml")
 
     def get_form_fields(self, page):
         form_fields = {}
@@ -62,7 +69,7 @@ class WPL:
 
     def get_holds(self, session, holds_url):
         holds = []
-        holds_page = BeautifulSoup(session.get(holds_url).text, "html.parser")
+        holds_page = BeautifulSoup(session.get(holds_url).text, "lxml")
 
         holds_table = holds_page.find("table", class_="patFunc")
 
@@ -85,7 +92,31 @@ class WPL:
                 elif cell_name == "Freeze":
                     hold[cell_name] = "checked" in hold_cell.input.attrs
                 else:
-                    # logger.info("cell " + cell_name)
                     hold[cell_name] = "".join(hold_cell.strings)
             holds.append(hold)
         return holds
+
+    def get_checkouts(self, session, checkouts_url):
+        checkouts = []
+        checkouts_page = BeautifulSoup(session.get(checkouts_url).text, "lxml")
+
+        checkouts_table = checkouts_page.find("table", class_="patFunc")
+
+        for checkout_row in checkouts_table.children:
+            if checkout_row.name != "tr":
+                continue
+
+            if "patFuncEntry" not in checkout_row["class"]:
+                continue
+            checkout = {}
+            for checkout_cell in checkout_row.children:
+                if checkout_cell.name != "td":
+                    continue
+                cell_class = checkout_cell["class"][0]
+                cell_name = cell_class.replace("patFunc", "")
+                if cell_name == "Mark":
+                    continue
+                else:
+                    checkout[cell_name] = "".join(checkout_cell.strings)
+            checkouts.append(checkout)
+        return checkouts
