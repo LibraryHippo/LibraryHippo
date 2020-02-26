@@ -14,6 +14,7 @@ class Config(object):
     MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS") != "False"
     MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
 
-    PATRON_NAME = os.environ.get("PATRON_NAME")
-    CARD_NUMBER = os.environ.get("CARD_NUMBER")
-    PIN = os.environ.get("PIN")
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL"
+    ) or "sqlite:///" + os.path.join(basedir, "app.db")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
