@@ -31,21 +31,13 @@ class WPL:
             summary_page.find(name="a", href=re.compile("/items$"))["href"],
         )
 
-        result = "<h1>Holds</h1>"
-        for hold in self.get_holds(session, holds_url):
-            result += "<dl>"
-            for k, v in hold.items():
-                result += f"<dt>{k}</dt><dd>{v}</dd>"
-            result += "</dl><hr>"
+        holds = self.get_holds(session, holds_url)
+        checkouts = self.get_checkouts(session, checkouts_url)
 
-        result += "<h1>Checkouts</h1>"
-        for checkout in self.get_checkouts(session, checkouts_url):
-            result += "<dl>"
-            for k, v in checkout.items():
-                result += f"<dt>{k}</dt><dd>{v}</dd>"
-            result += "</dl><hr>"
-
-        return result
+        return {
+            "holds": holds,
+            "checkouts": checkouts,
+        }
 
     def login(self, session, patron, number, pin):
         initial_login_page_view = session.get(self.login_url())
