@@ -1,6 +1,7 @@
 /logs/
 /venv/
 
+/app.db
 /secrets
 
 __pycache__/
