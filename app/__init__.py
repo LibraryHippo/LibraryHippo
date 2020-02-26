@@ -49,4 +49,4 @@ migrate = Migrate(app, db)
 
 app.logger.info("LibraryHippo startup")
 
-from app import routes
+from app import routes, models
