@@ -75,15 +75,18 @@ class WPL:
                     continue
                 cell_class = hold_cell["class"][0]
                 cell_name = cell_class.replace("patFunc", "")
-                if cell_name == "Mark":
-                    continue
-                if cell_name == "Pickup":
-                    hold[cell_name] = hold_cell.find(
-                        "option", selected="selected"
-                    ).string
-                elif cell_name == "Freeze":
-                    hold[cell_name] = "checked" in hold_cell.input.attrs
-                else:
+                try:
+                    if cell_name == "Mark":
+                        continue
+                    if cell_name == "Pickup":
+                        hold[cell_name] = hold_cell.find(
+                            "option", selected="selected"
+                        ).string
+                    elif cell_name == "Freeze":
+                        hold[cell_name] = "checked" in hold_cell.input.attrs
+                    else:
+                        hold[cell_name] = "".join(hold_cell.strings)
+                except:  # noqa there is nothing we can do
                     hold[cell_name] = "".join(hold_cell.strings)
             holds.append(hold)
         return holds
