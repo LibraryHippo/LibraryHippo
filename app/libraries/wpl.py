@@ -18,9 +18,9 @@ class WPL:
     def item_url(self, original_url):
         return urllib.parse.urljoin(self.login_url(), original_url)
 
-    def check_card(self, patron, number, pin):
+    def check_card(self, card):
         session = Session()
-        summary_page = self.login(session, patron, number, pin)
+        summary_page = self.login(session, card.patron_name, card.number, card.pin)
 
         holds_url = urllib.parse.urljoin(
             self.login_url(),
@@ -34,10 +34,7 @@ class WPL:
         holds = self.get_holds(session, holds_url)
         checkouts = self.get_checkouts(session, checkouts_url)
 
-        return {
-            "holds": holds,
-            "checkouts": checkouts,
-        }
+        return {"holds": holds, "checkouts": checkouts}
 
     def login(self, session, patron, number, pin):
         initial_login_page_view = session.get(self.login_url())
