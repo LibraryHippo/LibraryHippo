@@ -1,1 +1,1 @@
-web: gunicorn libraryhippo:app
+web: flask db upgrade; gunicorn libraryhippo:app
