@@ -1,10 +1,12 @@
 alembic==1.4.0
+Authomatic==1.0.0
 beautifulsoup4==4.8.2
 blinker==1.4
 certifi==2019.11.28
 chardet==3.0.4
 Click==7.0
 Flask==1.1.1
+Flask-Login==0.5.0
 Flask-Mail==0.9.1
 Flask-Migrate==2.5.2
 Flask-SQLAlchemy==2.4.1
