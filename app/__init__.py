@@ -1,6 +1,7 @@
 from logging.config import dictConfig
 import os
 
+from authomatic import Authomatic
 from flask import Flask
 from flask_login import LoginManager
 from flask_mail import Mail
@@ -48,6 +49,8 @@ login_manager = LoginManager(app)
 mail = Mail(app)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+authomatic = Authomatic(config=Config.OAUTH, secret=Config.SECRET_KEY)
 
 app.logger.info("LibraryHippo startup")
 
