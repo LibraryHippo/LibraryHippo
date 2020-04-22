@@ -2,7 +2,15 @@ import json
 
 from authomatic.adapters import WerkzeugAdapter
 
-from flask import flash, make_response, redirect, request, session, url_for
+from flask import (
+    flash,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from flask_login import current_user, login_user, logout_user
 
 from app import app, authomatic
@@ -14,7 +22,7 @@ from app.models import Card, db, User
 @app.route("/")
 @app.route("/index")
 def index():
-    return "LibraryHippo 2020"
+    return render_template("index.jinja")
 
 
 @app.route("/check")
