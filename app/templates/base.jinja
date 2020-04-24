@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>LibraryHippo</title>
+    </head>
+    <body>
+        <nav>
+        {% if current_user.is_anonymous %}
+        <a href="{{ url_for('login', provider='google') }}">Login</a>
+        {% else %}
+        <a href="{{ url_for('logout') }}">Logout {{ current_user.nickname }}</a>
+        {% endif %}
+        {% block body %}{% endblock %}
+    </body>
+</html>
