@@ -22,17 +22,21 @@ class WPL:
         session = Session()
         summary_page = self.login(session, card.patron_name, card.number, card.pin)
 
-        holds_url = urllib.parse.urljoin(
-            self.login_url(),
-            summary_page.find(name="a", href=re.compile("/holds$"))["href"],
-        )
-        checkouts_url = urllib.parse.urljoin(
-            self.login_url(),
-            summary_page.find(name="a", href=re.compile("/items$"))["href"],
-        )
+        holds_anchor = summary_page.find(name="a", href=re.compile("/holds$"))
+        if holds_anchor:
+            holds_url = urllib.parse.urljoin(self.login_url(), holds_anchor["href"])
+            holds = self.get_holds(session, holds_url)
+        else:
+            holds = []
 
-        holds = self.get_holds(session, holds_url)
-        checkouts = self.get_checkouts(session, checkouts_url)
+        checkouts_anchor = summary_page.find(name="a", href=re.compile("/items$"))
+        if checkouts_anchor:
+            checkouts_url = urllib.parse.urljoin(
+                self.login_url(), checkouts_anchor["href"]
+            )
+            checkouts = self.get_checkouts(session, checkouts_url)
+        else:
+            checkouts = []
 
         return {"holds": holds, "checkouts": checkouts}
 
