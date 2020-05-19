@@ -1,6 +1,7 @@
-/logs/
+logs/
 /venv/
 
+/.vscode/.ropeproject/objectdb
 /app.db
 /secrets
 
