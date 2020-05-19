@@ -9,8 +9,11 @@ def test_check_card_finds_holds(requests_mock):
         + "j_acegi_cas_security_check&lang=eng&scope=3"
     )
 
+    logout_url = "https://books.kpl.org/logout"
+
     requests_mock.get(login_url, text="")
     requests_mock.post(login_url, text="<a href='/holds'>holds</a>")
+    requests_mock.get(logout_url, text="")
 
     requests_mock.get(
         "/holds",
@@ -35,6 +38,28 @@ def test_check_card_finds_holds(requests_mock):
     hold = check_result.holds[0]
     assert hold.title == "Blood heir / Amélie Wen Zhao"
     assert hold.status == " 9 of 83 holds "
+
+
+def test_check_card_logs_out_after_check(requests_mock):
+    login_url = (
+        "https://books.kpl.org/iii/cas/login?service="
+        + "https://books.kpl.org/patroninfo~S3/"
+        + "j_acegi_cas_security_check&lang=eng&scope=3"
+    )
+
+    logout_url = "https://books.kpl.org/logout"
+
+    requests_mock.get(login_url, text="")
+    requests_mock.post(login_url, text="")
+    requests_mock.get(logout_url, text="")
+
+    card = make_card()
+
+    target = WPL()
+    target.check_card(card)
+
+    assert requests_mock.last_request.method == "GET"
+    assert requests_mock.last_request.url == logout_url
 
 
 def make_card():

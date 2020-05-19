@@ -41,6 +41,7 @@ class WPL:
         else:
             checkouts = []
 
+        self.logout(session)
         return CardCheckResult(holds, checkouts)
 
     def login(self, session, patron, number, pin):
@@ -125,3 +126,6 @@ class WPL:
 
             checkouts.append(checkout)
         return checkouts
+
+    def logout(self, session):
+        session.get(self.logout_url())
