@@ -11,37 +11,40 @@ import utils.soup
 
 
 def strip_tags(element):
-    return ''.join([e for e in element.recursiveChildGenerator()
-                    if isinstance(e, unicode)])
+    return "".join(
+        [e for e in element.recursiveChildGenerator() if isinstance(e, unicode)]
+    )
 
 
 def parse_status(status_element):
     rest = []
     due_text = status_element.contents[0].strip()
-    if due_text.startswith('DUE'):
+    if due_text.startswith("DUE"):
         due = due_text[4:12]
-        due = datetime.datetime.strptime(due, '%m-%d-%y').date()
-        rest.extend(due_text[12:].split(' '))
+        due = datetime.datetime.strptime(due, "%m-%d-%y").date()
+        rest.extend(due_text[12:].split(" "))
     else:
         due = due_text
-    rest.extend((('<br/>'.join(utils.soup.text(c)) for c in status_element.contents[1:])))
+    rest.extend(
+        (("<br/>".join(utils.soup.text(c)) for c in status_element.contents[1:]))
+    )
     return (due,) + tuple(rest)
 
 
 def parse_hold_status(status_element):
     due_text = status_element.contents[0].strip()
     special_statuses = {
-        'Ready.': Hold.READY,
-        'IN TRANSIT': Hold.IN_TRANSIT,
-        'CHECK SHELVES': Hold.CHECK_SHELVES,
-        'TRACE': Hold.DELAYED,
+        "Ready.": Hold.READY,
+        "IN TRANSIT": Hold.IN_TRANSIT,
+        "CHECK SHELVES": Hold.CHECK_SHELVES,
+        "TRACE": Hold.DELAYED,
     }
 
     if due_text in special_statuses:
         return special_statuses[due_text]
 
     parts = due_text.split()
-    if len(parts) > 2 and parts[1] == 'of':
+    if len(parts) > 2 and parts[1] == "of":
         return (int(parts[0]), int(parts[2]))
     else:
         return due_text
@@ -49,14 +52,14 @@ def parse_hold_status(status_element):
 
 def parse_hold_expires(cell):
     text = cell.contents[0].strip()
-    return datetime.datetime.strptime(text, '%m-%d-%y').date()
+    return datetime.datetime.strptime(text, "%m-%d-%y").date()
 
 
 def parse_hold_frozen(cell):
     if not cell.input:
         return False
     for attr_name, attr_value in cell.input.attrs:
-        if attr_name == 'checked':
+        if attr_name == "checked":
             return True
     return False
 
@@ -68,11 +71,13 @@ class LibraryAccount:
         self.fetcher = fetcher
 
     def login_url(self):
-        return 'https://books.kpl.org/iii/cas/login?service=' + \
-               'https://books.kpl.org/patroninfo~S3/j_acegi_cas_security_check&lang=eng&scope=3'
+        return (
+            "https://books.kpl.org/iii/cas/login?service="
+            + "https://books.kpl.org/patroninfo~S3/j_acegi_cas_security_check&lang=eng&scope=3"
+        )
 
     def logout_url(self):
-        return urlparse.urljoin(self.login_url(), '/logout?')
+        return urlparse.urljoin(self.login_url(), "/logout?")
 
     def item_url(self, original_url):
         return urlparse.urljoin(self.login_url(), original_url)
@@ -81,25 +86,30 @@ class LibraryAccount:
         form_fields = {}
         login_page = BeautifulSoup(self.fetcher(self.login_url()).content)
 
-        for input_field in login_page.findAll(name='input'):
+        for input_field in login_page.findAll(name="input"):
 
-            if input_field['type'] == 'submit':
-                form_fields['submit'] = input_field['name']
+            if input_field["type"] == "submit":
+                form_fields["submit"] = input_field["name"]
             else:
-                form_fields[input_field['name']] = input_field.get('value', '')
+                form_fields[input_field["name"]] = input_field.get("value", "")
 
-        form_fields.update({
-            'name': self.card.name,
-            'code': self.card.number,
-            'pin': self.card.pin,
-        })
+        form_fields.update(
+            {"name": self.card.name, "code": self.card.number, "pin": self.card.pin,}
+        )
 
         response = self.fetcher(self.login_url(), form_fields)
 
         response_data = response.content
 
-        if 'Sorry, the information you submitted was invalid. Please try again.' in response_data:
-            raise LoginError(patron=self.card.name, library=self.card.library.name, message="Bad credentials.")
+        if (
+            "Sorry, the information you submitted was invalid. Please try again."
+            in response_data
+        ):
+            raise LoginError(
+                patron=self.card.name,
+                library=self.card.library.name,
+                message="Bad credentials.",
+            )
 
         return response_data
 
@@ -111,7 +121,7 @@ class LibraryAccount:
         return holds
 
     def get_items(self):
-        if not hasattr(self, 'items_url'):
+        if not hasattr(self, "items_url"):
             return []
 
         response = self.fetcher(self.items_url)
@@ -130,33 +140,41 @@ class LibraryAccount:
 
             souped_response = BeautifulSoup(login_response)
 
-            holds_anchors = souped_response.findAll(name='a', href=re.compile('/holds$'))
+            holds_anchors = souped_response.findAll(
+                name="a", href=re.compile("/holds$")
+            )
             if holds_anchors:
-                holds_url = urlparse.urljoin(self.login_url(), holds_anchors[0]['href'])
+                holds_url = urlparse.urljoin(self.login_url(), holds_anchors[0]["href"])
                 holds = self.get_holds(holds_url)
             else:
-                logging.info('no link to holds found')
+                logging.info("no link to holds found")
                 holds = []
 
-            items_anchors = souped_response.findAll(name='a', href=re.compile('/items$'))
+            items_anchors = souped_response.findAll(
+                name="a", href=re.compile("/items$")
+            )
             if items_anchors:
-                self.items_url = urlparse.urljoin(self.login_url(), items_anchors[0]['href'])
+                self.items_url = urlparse.urljoin(
+                    self.login_url(), items_anchors[0]["href"]
+                )
             else:
-                logging.info('no link to items found')
+                logging.info("no link to items found")
 
-            expires_location = login_response.find('EXP DATE:')
+            expires_location = login_response.find("EXP DATE:")
             if expires_location >= 0:
                 expires_location += 9
-                expires_string = login_response[expires_location:expires_location + 10]
-                expires = datetime.datetime.strptime(expires_string, '%m-%d-%Y').date()
+                expires_string = login_response[
+                    expires_location : expires_location + 10
+                ]
+                expires = datetime.datetime.strptime(expires_string, "%m-%d-%Y").date()
 
             items = self.get_items()
 
         finally:
             try:
                 self.logout()
-            except: # noqa E722 - do not use bare except
-                logging.error('unable to log out', exc_info=True)
+            except:  # noqa E722 - do not use bare except
+                logging.error("unable to log out", exc_info=True)
 
         status = CardStatus(self.card, items, holds)
         if expires:
@@ -164,23 +182,29 @@ class LibraryAccount:
         return status
 
     def parse_holds(self, response):
-        table_header = response.find('tr', attrs={'class': 'patFuncHeaders'})
+        table_header = response.find("tr", attrs={"class": "patFuncHeaders"})
         if not table_header:
             return []
-        headers = [th.string.strip() for th in table_header('th')]
+        headers = [th.string.strip() for th in table_header("th")]
 
         entries = []
-        for row in table_header.findNextSiblings('tr'):
+        for row in table_header.findNextSiblings("tr"):
             entry = Hold(self.library, self.card)
             i = 0
-            for cell in row('td'):
+            for cell in row("td"):
                 column_name = headers[i]
 
-                if column_name == 'TITLE':
+                if column_name == "TITLE":
                     self.parse_title(cell, entry)
-                elif column_name == 'PICKUP LOCATION':
+                elif column_name == "PICKUP LOCATION":
                     if cell.select:
-                        pickup = cell.select.findAll('option', selected='selected')[0].string
+                        all_selected = cell.select.findAll(
+                            "option", selected="selected"
+                        )
+                        if all_selected:
+                            pickup = all_selected[0].string
+                        else:
+                            pickup = ""
                     else:
                         pickup = cell.string
 
@@ -189,23 +213,23 @@ class LibraryAccount:
                     # not a NaviagableString, which pickles terribly!
                     entry.pickup = str(pickup).strip()
 
-                elif column_name == 'STATUS':
+                elif column_name == "STATUS":
                     entry.status = parse_hold_status(cell)
 
-                elif column_name == 'CANCEL IF NOT FILLED BY':
+                elif column_name == "CANCEL IF NOT FILLED BY":
                     try:
                         entry.expires = parse_hold_expires(cell)
-                    except: # noqa E722 - do not use bare except
+                    except:  # noqa E722 - do not use bare except
                         # expiration info isn't critical - ignore
                         pass
 
-                elif column_name == 'FREEZE':
+                elif column_name == "FREEZE":
                     try:
                         if parse_hold_frozen(cell):
                             entry.freeze()
-                    except: # noqa E722 - do not use bare except
+                    except:  # noqa E722 - do not use bare except
                         # frozen info isn't critical - ignore
-                        logging.warn('error getting frozen info', exc_info=True)
+                        logging.warn("error getting frozen info", exc_info=True)
                         pass
                 i += 1
 
@@ -213,30 +237,30 @@ class LibraryAccount:
         return entries
 
     def parse_title(self, cell, thing):
-        title_parts = strip_tags(cell.a).split(' / ')
+        title_parts = strip_tags(cell.a).split(" / ")
         thing.title = title_parts[0].strip()
-        thing.author = ''.join(title_parts[1:]).strip()
-        thing.url = self.item_url(cell.a['href'])
+        thing.author = "".join(title_parts[1:]).strip()
+        thing.url = self.item_url(cell.a["href"])
 
     def parse_items(self, items):
-        table_header = items.find('tr', attrs={'class': 'patFuncHeaders'})
+        table_header = items.find("tr", attrs={"class": "patFuncHeaders"})
         if not table_header:
             return []
-        headers = [th.string.strip() for th in table_header('th')]
+        headers = [th.string.strip() for th in table_header("th")]
 
         entries = []
-        for row in table_header.findNextSiblings('tr'):
+        for row in table_header.findNextSiblings("tr"):
             entry = Item(self.library, self.card)
             i = 0
-            for cell in row('td'):
+            for cell in row("td"):
                 column_name = headers[i]
-                if column_name == 'TITLE':
+                if column_name == "TITLE":
                     self.parse_title(cell, entry)
 
-                elif column_name == 'STATUS':
+                elif column_name == "STATUS":
                     status = parse_status(cell)
                     entry.status = status[0]
-                    entry.add_status_note((' '.join(status[1:])).strip())
+                    entry.add_status_note((" ".join(status[1:])).strip())
                 i += 1
             entries.append(entry)
         return entries
@@ -248,5 +272,5 @@ def main(args=None):
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
