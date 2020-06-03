@@ -1,4 +1,7 @@
 -c requirements.txt
 invoke
+pep8-naming
 pytest
+pytest-black
+pytest-flake8
 requests-mock

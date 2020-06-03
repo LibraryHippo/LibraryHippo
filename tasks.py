@@ -13,3 +13,9 @@ def run(c):
 def deploy(c):
     """Deploy the application to Heroku"""
     c.run("git push --force-with-lease heroku HEAD:master")
+
+
+@task
+def test(c):
+    """Run tests like we would on the CI server"""
+    c.run("pytest --black --flake8 --color=yes")
