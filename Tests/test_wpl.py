@@ -16,10 +16,11 @@ from fakes import MyOpener
 
 def test__parse_holds__numeric_position__reads_position():
     response = BeautifulSoup(
-        '''<table>
+        """<table>
         <tr class="patFuncHeaders"><th>STATUS</th></tr>
         <tr><td> 9 of 83 holds </td></tr>
-        </table>''')
+        </table>"""
+    )
 
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     assert (9, 83) == w.parse_holds(response)[0].status
@@ -27,43 +28,50 @@ def test__parse_holds__numeric_position__reads_position():
 
 def test__parse_holds__title_with_slash__reads_title():
     response = BeautifulSoup(
-        '''<table>
+        """<table>
         <tr class="patFuncHeaders"><th> TITLE </th></tr>
         <tr><td align="left"><a href="/BLAH"> Either/Or / Boo! </a></td></tr>
-        </table>''')
+        </table>"""
+    )
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     hold = w.parse_holds(response)[0]
-    assert ('Either/Or') == hold.title
+    assert ("Either/Or") == hold.title
 
 
 def test__parse_holds__author_with_slash__reads_author():
     response = BeautifulSoup(
-        '''<table>
+        """<table>
         <tr class="patFuncHeaders"><th> TITLE </th></tr>
         <tr><td align="left"><a href="/BLAH"> JustOne / Bo/o! </a></td></tr>
-        </table>''')
+        </table>"""
+    )
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     hold = w.parse_holds(response)[0]
-    assert ('Bo/o!') == hold.author
+    assert ("Bo/o!") == hold.author
 
 
-@pytest.mark.parametrize("hold_text,expected_status", [
-        ('Ready.', Hold.READY),
-        ('IN TRANSIT', Hold.IN_TRANSIT),
-        ('CHECK SHELVES', Hold.CHECK_SHELVES),
-        ('TRACE', Hold.DELAYED),
-])
+@pytest.mark.parametrize(
+    "hold_text,expected_status",
+    [
+        ("Ready.", Hold.READY),
+        ("IN TRANSIT", Hold.IN_TRANSIT),
+        ("CHECK SHELVES", Hold.CHECK_SHELVES),
+        ("TRACE", Hold.DELAYED),
+    ],
+)
 def test__parse_holds__named_position__parses_position(hold_text, expected_status):
     response = BeautifulSoup(
-        '''<table>
+        """<table>
         <tr class="patFuncHeaders"><th>STATUS</th></tr>
         <tr><td> %s </td></tr>
-        </table>''' % hold_text)
+        </table>"""
+        % hold_text
+    )
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     assert expected_status == w.parse_holds(response)[0].status
 
 
-hold_with_pickup_dropdown = '''<table lang="en" class="patFunc"><tr class="patFuncTitle">
+hold_with_pickup_dropdown = """<table lang="en" class="patFunc"><tr class="patFuncTitle">
 <th colspan="6" class="patFuncTitle">
 6 HOLDS
 </th>
@@ -102,28 +110,86 @@ hold_with_pickup_dropdown = '''<table lang="en" class="patFunc"><tr class="patFu
 <td  class="patFuncFreeze" align="center"><input type="checkbox" name="freezeb2193902" /></td>
 </tr>
 </table>
-'''
+"""
 
 
 def test__parse_holds___pickup_dropdown__pickup_is_read():
     response = BeautifulSoup(hold_with_pickup_dropdown)
     w = wpl.LibraryAccount(MyCard(), MyOpener())
-    assert 'WPL McCormick Branch' == w.parse_holds(response)[0].pickup
+    assert "WPL McCormick Branch" == w.parse_holds(response)[0].pickup
 
 
 def test__parse_holds___pickup_dropdown__pickup_is_string():
-    '''makes for better pickling'''
+    """makes for better pickling"""
     response = BeautifulSoup(hold_with_pickup_dropdown)
     w = wpl.LibraryAccount(MyCard(), MyOpener())
-    assert str == type(w.parse_holds(response)[0].pickup)  # noqa: E721 - need to check exact type
+    assert str == type(
+        w.parse_holds(response)[0].pickup
+    )  # noqa: E721 - need to check exact type
+
+
+hold_with_unselected_pickup_dropdown = """<table lang="en" class="patFunc"><tr class="patFuncTitle">
+<th colspan="6" class="patFuncTitle">
+6 HOLDS
+</th>
+</tr>
+
+<tr class="patFuncHeaders">
+<th class="patFuncHeaders"> CANCEL </th>
+<th class="patFuncHeaders"> TITLE </th>
+<th class="patFuncHeaders"> STATUS </th>
+<th class="patFuncHeaders">PICKUP LOCATION</th>
+<th class="patFuncHeaders"> CANCEL IF NOT FILLED BY </th>
+<th class="patFuncHeaders"> FREEZE </th>
+</tr>
+
+
+<tr class="patFuncEntry">
+<td  class="patFuncMark" align="center">
+<input type="checkbox" name="cancelb2193902x00" /></td>
+<td  class="patFuncTitle">
+<a href="/patroninfo~S3/1307788/item&2193902"> Stories </a>
+<br />
+</td>
+<td  class="patFuncStatus"> 1 of 1 holds </td>
+<td class="patFuncPickup">
+<div class="patFuncPickupLabel">
+<label for="locb2677337x00">Pickup Location</label></div>
+<select name="locb2677337x00" id="locb2677337x00">
+<option value="mn+++">KPL Central Library CURBSIDE</option>
+<option value="w++++">WPL Main Library CURBSIDE</option>
+<option value="ww+++">WPL John M. Harper CURBSIDE</option>
+</select>
+</td>
+<td class="patFuncCancel">04-03-11</td>
+<td  class="patFuncFreeze" align="center"><input type="checkbox" name="freezeb2193902" /></td>
+</tr>
+</table>
+"""
+
+
+def test__parse_holds___unselected_pickup_dropdown__pickup_is_empty():
+    response = BeautifulSoup(hold_with_unselected_pickup_dropdown)
+    w = wpl.LibraryAccount(MyCard(), MyOpener())
+    assert "" == w.parse_holds(response)[0].pickup
+
+
+def test__parse_holds___unselected_pickup_dropdown__pickup_is_string():
+    """makes for better pickling"""
+    response = BeautifulSoup(hold_with_unselected_pickup_dropdown)
+    w = wpl.LibraryAccount(MyCard(), MyOpener())
+    assert str == type(
+        w.parse_holds(response)[0].pickup
+    )  # noqa: E721 - need to check exact type
 
 
 def test__parse_holds___with_expiration_date__reads_expiration():
     response = BeautifulSoup(
-        '''<table>
+        """<table>
         <tr class="patFuncHeaders"><th>CANCEL IF NOT FILLED BY</th></tr>
         <tr><td>04-03-11</td></tr>
-        </table>''')
+        </table>"""
+    )
 
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     hold = w.parse_holds(response)[0]
@@ -132,7 +198,7 @@ def test__parse_holds___with_expiration_date__reads_expiration():
 
 def test__parse_holds___frozen__added_to_status_notes():
     response = BeautifulSoup(
-        '''<table>
+        """<table>
   <tr class="patFuncHeaders">
     <th> FREEZE
     </th>
@@ -142,7 +208,8 @@ def test__parse_holds___frozen__added_to_status_notes():
       <input type="checkbox" name="freezeb2186875" checked />
     </td>
   </tr>
-        </table>''')
+        </table>"""
+    )
 
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     assert w.parse_holds(response)[0].is_frozen()
@@ -150,17 +217,19 @@ def test__parse_holds___frozen__added_to_status_notes():
 
 def test__parse_holds___empty_freeze_field__is_not_frozen():
     response = BeautifulSoup(
-        '''<table>
+        """<table>
         <tr class="patFuncHeaders"><th> FREEZE </th></tr>
         <tr><td  class="patFuncFreeze" align="center">&nbsp;</td></tr>
-        </table>''')
+        </table>"""
+    )
 
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     assert not w.parse_holds(response)[0].is_frozen()
 
 
 def test__parse_holds___hold_for_waterloo__finds_correct_url():
-    response = BeautifulSoup('''<table>
+    response = BeautifulSoup(
+        """<table>
   <tr class="patFuncHeaders">
     <th> TITLE
     </th>
@@ -174,13 +243,15 @@ def test__parse_holds___hold_for_waterloo__finds_correct_url():
         <br />
       </td>
     </tr>
-    </table>''')
+    </table>"""
+    )
     w = wpl.LibraryAccount(MyCard(), MyOpener())
-    assert 'https://books.kpl.org/record=b2247789~S3' == w.parse_holds(response)[0].url
+    assert "https://books.kpl.org/record=b2247789~S3" == w.parse_holds(response)[0].url
 
 
 def test__parse_holds___hold_for_kitchener__finds_correct_url():
-    response = BeautifulSoup('''<table>
+    response = BeautifulSoup(
+        """<table>
       <tr class="patFuncHeaders"><th> TITLE </th></tr>
       <tr class="patFuncEntry">
         <td  class="patFuncTitle">
@@ -188,14 +259,15 @@ def test__parse_holds___hold_for_kitchener__finds_correct_url():
           <br />
         </td>
       </tr>
-      </table>''')
+      </table>"""
+    )
     k = kpl.LibraryAccount(MyCard(), MyOpener())
-    assert 'https://books.kpl.org/record=b2232976~S1' == k.parse_holds(response)[0].url
+    assert "https://books.kpl.org/record=b2232976~S1" == k.parse_holds(response)[0].url
 
 
 def test__parse_items__title_has_slash__parses_title():
     response = BeautifulSoup(
-        '''
+        """
         <table lang="en">
           <tr class="patFuncHeaders">
             <th> RENEW
@@ -227,16 +299,17 @@ def test__parse_items__title_has_slash__parses_title():
             </td>
         </tr>
         </table>
-        ''')
+        """
+    )
 
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     item = w.parse_items(response)[0]
-    assert 'The city/the city' == item.title
+    assert "The city/the city" == item.title
 
 
 def test__parse_items__author_has_accent__parses_author():
     response = BeautifulSoup(
-        '''
+        """
         <table lang="en">
           <tr class="patFuncHeaders">
             <th> RENEW
@@ -268,16 +341,17 @@ def test__parse_items__author_has_accent__parses_author():
             </td>
         </tr>
         </table>
-        ''')
+        """
+    )
 
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     item = w.parse_items(response)[0]
-    assert 'China Mi\u00E9ville' == item.author
+    assert "China Mi\u00E9ville" == item.author
 
 
 def test__parse_items__with_status_notes__finds_status_notes():
     response = BeautifulSoup(
-        '''
+        """
         <table lang="en">
           <tr class="patFuncHeaders">
             <th> RENEW
@@ -309,16 +383,17 @@ def test__parse_items__with_status_notes__finds_status_notes():
             </td>
         </tr>
         </table>
-        ''')
+        """
+    )
 
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     item = w.parse_items(response)[0]
-    assert ['Renewed 1 time'] == item.status_notes
+    assert ["Renewed 1 time"] == item.status_notes
 
 
 def test__parse_items__span_in_title__all_text_in_title():
     response = BeautifulSoup(
-        '''
+        """
         <table lang="en">
           <tr class="patFuncHeaders">
             <th> RENEW
@@ -352,15 +427,16 @@ def test__parse_items__span_in_title__all_text_in_title():
             </td>
         </tr>
         </table>
-        ''')
+        """
+    )
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     item = w.parse_items(response)[0]
-    assert '''Hiking the redwood coast -- 2004''' == item.title
+    assert """Hiking the redwood coast -- 2004""" == item.title
 
 
 def test__parse_items__no_author__author_blank():
     response = BeautifulSoup(
-        '''
+        """
         <table lang="en">
           <tr class="patFuncHeaders">
             <th> RENEW
@@ -394,15 +470,16 @@ def test__parse_items__no_author__author_blank():
             </td>
         </tr>
         </table>
-        ''')
+        """
+    )
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     item = w.parse_items(response)[0]
-    assert '' == item.author
+    assert "" == item.author
 
 
 def test__parse_status__status_notes_jammed_up_against_date__date_parsed():
     response = BeautifulSoup(
-        '''
+        """
         <table lang="en">
           <tr class="patFuncHeaders">
             <th> RENEW
@@ -433,19 +510,20 @@ def test__parse_status__status_notes_jammed_up_against_date__date_parsed():
 </td>
         </tr>
         </table>
-        ''')
+        """
+    )
 
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     item = w.parse_items(response)[0]
-    assert 'The city/the city' == item.title
-    assert 'China Mi\u00E9ville' == item.author
+    assert "The city/the city" == item.title
+    assert "China Mi\u00E9ville" == item.author
 
     assert datetime.date(2009, 10, 7) == item.status
 
 
 def test__parse_status__status_notes_jammed_up_against_date__status_notes_found():
     response = BeautifulSoup(
-        '''
+        """
         <table lang="en">
           <tr class="patFuncHeaders">
             <th> RENEW
@@ -476,15 +554,16 @@ def test__parse_status__status_notes_jammed_up_against_date__status_notes_found(
 </td>
         </tr>
         </table>
-        ''')
+        """
+    )
 
     w = wpl.LibraryAccount(MyCard(), MyOpener())
     item = w.parse_items(response)[0]
 
-    assert ['IN LIBRARY USE'] == item.status_notes
+    assert ["IN LIBRARY USE"] == item.status_notes
 
 
-failing_login_response = '''
+failing_login_response = """
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
@@ -694,19 +773,21 @@ if (keycode==13)
 <!--this is customized </iiidb/http/apps//CAS/resources/ipsso_s3.html>-->
 
     <!--end theForm4-->
-'''
+"""
 
 
 def test__login__login_fails__throws():
 
-    w = wpl.LibraryAccount(MyCard(),
-                           MyOpener('',
-                                    failing_login_response))
+    w = wpl.LibraryAccount(MyCard(), MyOpener("", failing_login_response))
     py.test.raises(LoginError, w.login)
 
 
 def test__login__new_kpl_format__passes():
-    w = wpl.LibraryAccount(MyCard(), MyOpener('', '''
+    w = wpl.LibraryAccount(
+        MyCard(),
+        MyOpener(
+            "",
+            """
 <!-- Rel 2007 "Skyline" Example Set -->
 <!-- This File Last Changed: 02 September 2008 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -899,13 +980,18 @@ Classic catalogue only:
 </body>
 </html>
 <!--this is customized <screens/patronview_web_s1.html>-->
-'''))
+""",
+        ),
+    )
     w.login()
 
 
 def test__get_status__with_card_expiry_date__reads_date():
-    w = wpl.LibraryAccount(MyCard(), MyOpener('',
-                           '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    w = wpl.LibraryAccount(
+        MyCard(),
+        MyOpener(
+            "",
+            """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>Kitchener and Waterloo Public Libraries                                    /WPL</title>
@@ -1165,14 +1251,22 @@ Your library account may not be available during scheduled system maintenance
 </html>
 
 <!--this is customized <screens/patronview_web_s3.html>-->
-''', '', '', ''))
+""",
+            "",
+            "",
+            "",
+        ),
+    )
     card_info = w.get_status()
     assert datetime.date(2009, 12, 4) == card_info.expires
 
 
 def test__get_status__wpl_login__finds_correct_holds_url():
-    w = wpl.LibraryAccount(MyCard(), MyOpener('#login',
-                                              '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    w = wpl.LibraryAccount(
+        MyCard(),
+        MyOpener(
+            "#login",
+            """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
                                                        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <body >
   <table>
@@ -1203,17 +1297,27 @@ def test__get_status__wpl_login__finds_correct_holds_url():
     </tr>
   </table>
 </body>
-</html>''', '''<table>
+</html>""",
+            """<table>
   <tr class="patFuncHeaders"><th> TITLE </th></tr>
   <tr><td align="left"><a href="/BLAH"> Either/Or / Bo/o! </a></td></tr>
-  </table>''', '#items', '#logout'))
+  </table>""",
+            "#items",
+            "#logout",
+        ),
+    )
     status = w.get_status()
-    assert 'https://books.kpl.org/patroninfo~S3/XXXXXXX/holds' == status.holds[0].holds_url
+    assert (
+        "https://books.kpl.org/patroninfo~S3/XXXXXXX/holds" == status.holds[0].holds_url
+    )
 
 
 def test__get_status__wpl_login_no_holds__finds_no_holds():
-    w = wpl.LibraryAccount(MyCard(), MyOpener('#login',
-                                              '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    w = wpl.LibraryAccount(
+        MyCard(),
+        MyOpener(
+            "#login",
+            """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
                                                    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <body >
   <table>
@@ -1241,14 +1345,22 @@ def test__get_status__wpl_login_no_holds__finds_no_holds():
     </tr>
   </table>
 </body>
-</html>''', '#holds', '#items', '#logout'))
+</html>""",
+            "#holds",
+            "#items",
+            "#logout",
+        ),
+    )
     status = w.get_status()
     assert status.holds == []
 
 
 def test__get_status__wpl_login_no_items__finds_no_items():
-    w = wpl.LibraryAccount(MyCard(), MyOpener('#login',
-                                              '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    w = wpl.LibraryAccount(
+        MyCard(),
+        MyOpener(
+            "#login",
+            """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
                                                     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <body >
   <table>
@@ -1276,13 +1388,21 @@ def test__get_status__wpl_login_no_items__finds_no_items():
     </tr>
   </table>
 </body>
-</html>''', '#holds', '#items', '#logout'))
+</html>""",
+            "#holds",
+            "#items",
+            "#logout",
+        ),
+    )
     status = w.get_status()
     assert status.items == []
 
 
 def test__login_wpl_format_2013_06_07__can_parse_the_login_screen():
-    w = wpl.LibraryAccount(MyCard(), MyOpener('''
+    w = wpl.LibraryAccount(
+        MyCard(),
+        MyOpener(
+            """
      <form id="fm1" class="fm-v clearfix" method="post"
            action="/iii/cas/login?service=https://books.kpl.org/patroninfo~S3/j_acegi_cas_security_check&amp;lang=eng&amp;scope=3">
     <!--display any errors-->
@@ -1365,7 +1485,9 @@ def test__login_wpl_format_2013_06_07__can_parse_the_login_screen():
     <input type="hidden" name="lt"
               value="_cF3646058-103E-2F3B-C9DB-0C9931EDB267_k24CDA5F8-E174-085D-7570-0D56ADBFE0E7" />
     <input type="hidden" name="_eventId" value="submit" />
-    </form>''',
-                                              # "patNameAddress" is enough to make the login think it worked
-                                              '''"patNameAddress"'''))
+    </form>""",
+            # "patNameAddress" is enough to make the login think it worked
+            '''"patNameAddress"''',
+        ),
+    )
     w.login()
