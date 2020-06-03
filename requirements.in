@@ -1,0 +1,11 @@
+authomatic
+beautifulsoup4
+flask-login
+flask-mail
+flask-migrate
+flask-sqlalchemy
+flask
+gunicorn
+lxml
+python-dotenv
+requests
