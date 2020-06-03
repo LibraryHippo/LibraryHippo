@@ -29,4 +29,4 @@ jobs:
           pip install -r requirements.txt -r dev-requirements.txt
       - name: Test ${{ matrix.python-version }} on ${{ matrix.os }}
         run: |
-          pytest --color=yes
+          inv test

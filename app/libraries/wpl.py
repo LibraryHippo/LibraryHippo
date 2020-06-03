@@ -9,7 +9,8 @@ class WPL:
     def login_url(self):
         return (
             "https://books.kpl.org/iii/cas/login?service="
-            + "https://books.kpl.org/patroninfo~S3/j_acegi_cas_security_check&lang=eng&scope=3"
+            "https://books.kpl.org/patroninfo~S3/"
+            "j_acegi_cas_security_check&lang=eng&scope=3"
         )
 
     def logout_url(self):

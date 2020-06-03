@@ -19,7 +19,10 @@ dictConfig(
         "disable_existing_loggers": True,
         "formatters": {
             "default": {
-                "format": "%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"
+                "format": (
+                    "%(asctime)s %(levelname)s: %(message)s"
+                    " [in %(pathname)s:%(lineno)d]"
+                )
             }
         },
         "handlers": {
@@ -54,4 +57,4 @@ authomatic = Authomatic(config=Config.OAUTH, secret=Config.SECRET_KEY)
 
 app.logger.info("LibraryHippo startup")
 
-from app import routes, models
+from app import routes, models  # noqa - imports at bottom to avoid circular references
