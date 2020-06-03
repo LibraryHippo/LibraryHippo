@@ -1,0 +1,32 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - lh2020
+  pull_request:
+    branches:
+      - lh2020
+
+jobs:
+  test:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.8]
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }} on ${{ matrix.os }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies - Python ${{ matrix.python-version }} on ${{ matrix.os }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r dev-requirements.txt
+      - name: Test ${{ matrix.python-version }} on ${{ matrix.os }}
+        run: |
+          pytest
