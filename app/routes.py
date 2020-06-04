@@ -43,7 +43,7 @@ def check():
     result += "<h1>Checkouts</h1>"
     for checkout in card_check_result["checkouts"]:
         result += "<dl>"
-        for k, v in checkout.items():
+        for k, v in checkout.__dict__.items():
             result += f"<dt>{k}</dt><dd>{v}</dd>"
         result += "</dl><hr>"
 

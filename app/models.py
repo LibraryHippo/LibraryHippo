@@ -34,6 +34,17 @@ class Hold:
         self.pickup = ""
 
 
+class Checkout:
+    def __init__(self):
+        self.patron_name = ""
+        self.library_name = ""
+        self.title = ""
+        self.author = ""
+        self.url = ""
+        self.due_date = ""
+        self.status_notes = []
+
+
 @login_manager.user_loader
 def load_user(id):
     return User.query.get(int(id))

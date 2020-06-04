@@ -4,7 +4,7 @@ import urllib.parse
 from bs4 import BeautifulSoup
 from requests import Session
 
-from app.models import Hold
+from app.models import Hold, Checkout
 
 
 class WPL:
@@ -109,15 +109,19 @@ class WPL:
 
             if "patFuncEntry" not in checkout_row["class"]:
                 continue
-            checkout = {}
+            checkout = Checkout()
             for checkout_cell in checkout_row.children:
                 if checkout_cell.name != "td":
                     continue
                 cell_class = checkout_cell["class"][0]
                 cell_name = cell_class.replace("patFunc", "")
-                if cell_name == "Mark":
-                    continue
-                else:
-                    checkout[cell_name] = "".join(checkout_cell.strings)
+                try:
+                    if cell_name == "Title":
+                        checkout.title = "".join(checkout_cell.strings)
+                    elif cell_name == "Status":
+                        checkout.due_date = "".join(checkout_cell.strings)
+                except:  # noqa there is nothing we can do
+                    pass
+
             checkouts.append(checkout)
         return checkouts
