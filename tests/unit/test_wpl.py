@@ -32,10 +32,9 @@ def test_check_card_finds_holds(requests_mock):
 
     assert check_result
     assert check_result["holds"]
-    assert check_result["holds"][0] == {
-        "Status": " 9 of 83 holds ",
-        "Title": "Blood heir / Amélie Wen Zhao",
-    }
+    hold = check_result["holds"][0]
+    assert hold.title == "Blood heir / Amélie Wen Zhao"
+    assert hold.status == " 9 of 83 holds "
 
 
 def make_card():

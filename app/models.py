@@ -1,3 +1,5 @@
+import datetime
+
 from app import db, login_manager
 from flask_login import UserMixin
 
@@ -18,6 +20,18 @@ class User(UserMixin, db.Model):
     social_id = db.Column(db.String(64), nullable=False, unique=True)
     nickname = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(64), nullable=False)
+
+
+class Hold:
+    def __init__(self):
+        self.patron_name = ""
+        self.title = ""
+        self.author = ""
+        self.url = ""
+        self.status = ""
+        self.status_notes = []
+        self.expires = datetime.date.max
+        self.pickup = ""
 
 
 @login_manager.user_loader

@@ -4,6 +4,8 @@ import urllib.parse
 from bs4 import BeautifulSoup
 from requests import Session
 
+from app.models import Hold
+
 
 class WPL:
     def login_url(self):
@@ -71,25 +73,27 @@ class WPL:
             if hold_row.name != "tr" or "patFuncEntry" not in hold_row["class"]:
                 continue
 
-            hold = {}
+            hold = Hold()
             for hold_cell in hold_row.children:
                 if hold_cell.name != "td":
                     continue
                 cell_class = hold_cell["class"][0]
                 cell_name = cell_class.replace("patFunc", "")
                 try:
-                    if cell_name == "Mark":
-                        continue
+                    if cell_name == "Title":
+                        hold.title = "".join(hold_cell.strings)
+                    elif cell_name == "Status":
+                        hold.status = "".join(hold_cell.strings)
                     if cell_name == "Pickup":
-                        hold[cell_name] = hold_cell.find(
+                        hold.pickup = hold_cell.find(
                             "option", selected="selected"
                         ).string
-                    elif cell_name == "Freeze":
-                        hold[cell_name] = "checked" in hold_cell.input.attrs
-                    else:
-                        hold[cell_name] = "".join(hold_cell.strings)
+                    elif cell_name == "Freeze" and "checked" in hold_cell.input.attrs:
+                        hold.status_notes.append("Frozen")
+                    elif cell_name == "Cancel":
+                        hold.expires = "".join(hold_cell.strings)
                 except:  # noqa there is nothing we can do
-                    hold[cell_name] = "".join(hold_cell.strings)
+                    pass
             holds.append(hold)
         return holds
 
