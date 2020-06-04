@@ -36,7 +36,7 @@ class Hold:
         self.status = ""
         self.status_notes = []
         self.expires = datetime.date.max
-        self.pickup = ""
+        self.pickup_location = ""
 
 
 class Checkout:

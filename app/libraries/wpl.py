@@ -97,9 +97,9 @@ class WPL:
                     elif cell_name == "Status":
                         hold.status = self.__parse_hold_status(hold_cell)
                     elif cell_name == "Pickup":
-                        hold.pickup = hold_cell.find(
-                            "option", selected="selected"
-                        ).string
+                        hold.pickup_location = self.__parse_hold_pickup_location(
+                            hold_cell
+                        )
                     elif cell_name == "Freeze" and "checked" in hold_cell.input.attrs:
                         hold.status_notes.append("Frozen")
                     elif cell_name == "Cancel":
@@ -150,3 +150,13 @@ class WPL:
         if len(parts) > 2 and parts[1] == "of":
             return (int(parts[0]), int(parts[2]))
         return text
+
+    def __parse_hold_pickup_location(self, pickup_cell):
+        location = ""
+        if pickup_cell.find("select"):
+            selected = pickup_cell.find("option", selected="selected")
+            if selected:
+                location = selected.string
+        else:
+            location = pickup_cell.string
+        return location.strip()

@@ -96,6 +96,60 @@ def test_check_card_reads_hold_position(hold_text, expected_status, wpl_site):
     assert hold.status == expected_status
 
 
+@pytest.mark.parametrize(
+    "pickup_text,expected_pickup_location",
+    [
+        (
+            """<div class="patFuncPickupLabel">
+                 <label for="locb2677337x00">Pickup Location</label>
+               </div>
+               <select name="locb2677337x00" id="locb2677337x00">
+                 <option value="ww+++">WPL John M. Harper</option>
+                 <option value="w++++" selected="selected">WPL Main Library</option>
+               </select>""",
+            "WPL Main Library",
+        ),
+        (
+            """<div class="patFuncPickupLabel">
+                 <label for="locb2677337x00">Pickup Location</label>
+               </div>
+               <select name="locb2677337x00" id="locb2677337x00">
+                 <option value="ww+++">WPL John M. Harper</option>
+                 <option value="w++++">WPL Main Library</option>
+               </select>""",
+            "",
+        ),
+        ("Pioneer Park", "Pioneer Park"),
+    ],
+)
+def test_check_card_reads_pickup_location(
+    pickup_text, expected_pickup_location, wpl_site
+):
+    wpl_site.post(login_url, text="<a href='/holds'>holds</a>")
+
+    wpl_site.get(
+        "/holds",
+        text=f"""
+<table class="patFunc">
+  <tr class="patFuncHeaders"><th>PICKUP LOCATION</th></tr>
+  <tr class="patFuncEntry">
+    <td class="patFuncPickup">{pickup_text}</td>
+  </tr>
+</table>
+""",
+    )
+
+    card = make_card()
+
+    target = WPL()
+    check_result = target.check_card(card)
+
+    assert check_result
+    assert check_result.holds
+    hold = check_result.holds[0]
+    assert hold.pickup_location == expected_pickup_location
+
+
 def test_check_card_logs_out_after_check(wpl_site):
     card = make_card()
 
