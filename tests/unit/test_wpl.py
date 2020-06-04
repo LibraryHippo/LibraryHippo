@@ -60,16 +60,19 @@ def test_check_card_slashes_in_holds_titles_split_right(
     assert hold.author == expected_author
 
 
-def test_check_card_reads_numeric_hold_position_as_tuple(wpl_site):
+@pytest.mark.parametrize("hold_text,expected_status", [(" 9 of 83 holds ", (9, 83))])
+def test_check_card_reads_numeric_hold_position_as_tuple(
+    hold_text, expected_status, wpl_site
+):
     wpl_site.post(login_url, text="<a href='/holds'>holds</a>")
 
     wpl_site.get(
         "/holds",
-        text="""
+        text=f"""
              <table class="patFunc">
              <tr class="patFuncHeaders"><th>STATUS</th></tr>
              <tr class="patFuncEntry">
-                 <td class="patFuncStatus"> 9 of 83 holds </td>
+                 <td class="patFuncStatus">{hold_text}</td>
              </tr>
              </table>
              """,
@@ -83,7 +86,7 @@ def test_check_card_reads_numeric_hold_position_as_tuple(wpl_site):
     assert check_result
     assert check_result.holds
     hold = check_result.holds[0]
-    assert hold.status == (9, 83)
+    assert hold.status == expected_status
 
 
 def test_check_card_logs_out_after_check(wpl_site):
