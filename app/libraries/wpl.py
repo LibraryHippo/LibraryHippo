@@ -4,7 +4,7 @@ import urllib.parse
 from bs4 import BeautifulSoup
 from requests import Session
 
-from app.models import Hold, Checkout
+from app.models import CardCheckResult, Checkout, Hold
 
 
 class WPL:
@@ -41,7 +41,7 @@ class WPL:
         else:
             checkouts = []
 
-        return {"holds": holds, "checkouts": checkouts}
+        return CardCheckResult(holds, checkouts)
 
     def login(self, session, patron, number, pin):
         initial_login_page_view = session.get(self.login_url())

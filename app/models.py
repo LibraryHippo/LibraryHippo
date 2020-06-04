@@ -45,6 +45,12 @@ class Checkout:
         self.status_notes = []
 
 
+class CardCheckResult:
+    def __init__(self, holds, checkouts):
+        self.holds = holds
+        self.checkouts = checkouts
+
+
 @login_manager.user_loader
 def load_user(id):
     return User.query.get(int(id))
