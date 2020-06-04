@@ -82,7 +82,11 @@ class WPL:
                 cell_name = cell_class.replace("patFunc", "")
                 try:
                     if cell_name == "Title":
-                        hold.title = "".join(hold_cell.strings)
+                        text = "".join(hold_cell.strings)
+                        parts = text.split(" / ", 1)
+                        hold.title = parts[0].strip()
+                        if len(parts) > 1:
+                            hold.author = parts[1].strip()
                     elif cell_name == "Status":
                         text = "".join(hold_cell.strings)
                         parts = text.split()

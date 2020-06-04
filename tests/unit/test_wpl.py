@@ -12,19 +12,40 @@ login_url = (
 logout_url = "https://books.kpl.org/logout"
 
 
-def test_check_card_finds_holds(wpl_site):
+@pytest.mark.parametrize(
+    "title_text,expected_title,expected_author",
+    [
+        (
+            "Full throttle : stories / Joe Hill / Someone Else",
+            "Full throttle : stories",
+            "Joe Hill / Someone Else",
+        ),
+        ("Full throttle : stories / Joe Hill", "Full throttle : stories", "Joe Hill",),
+        ("Full throttle : stories", "Full throttle : stories", "",),
+    ],
+)
+def test_check_card_slashes_in_holds_titles_split_right(
+    title_text, expected_title, expected_author, wpl_site
+):
     wpl_site.post(login_url, text="<a href='/holds'>holds</a>")
 
     wpl_site.get(
         "/holds",
-        text="""
-             <table class="patFunc">
-             <tr class="patFuncHeaders"><th> TITLE </th></tr>
-             <tr class="patFuncEntry">
-                 <td class="patFuncTitle">Blood heir / Amélie Wen Zhao</td>
-             </tr>
-             </table>
-             """,
+        text=f"""
+<table class="patFunc">
+  <tr class="patFuncHeaders"><th>TITLE</th></tr>
+  <tr class="patFuncEntry">
+    <td class="patFuncTitle">
+      <label for="cancelb2692795x05">
+        <a href="https://URL"target="_parent">
+          <span class="patFuncTitleMain">{title_text}</span>
+        </a>
+      </label>
+    <br>
+    </td>
+  </tr>
+</table>
+""",
     )
 
     card = make_card()
@@ -35,7 +56,8 @@ def test_check_card_finds_holds(wpl_site):
     assert check_result
     assert check_result.holds
     hold = check_result.holds[0]
-    assert hold.title == "Blood heir / Amélie Wen Zhao"
+    assert hold.title == expected_title
+    assert hold.author == expected_author
 
 
 def test_check_card_reads_numeric_hold_position_as_tuple(wpl_site):
