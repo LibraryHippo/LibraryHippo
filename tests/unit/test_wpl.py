@@ -1,7 +1,7 @@
 import pytest
 
 from app.libraries.wpl import WPL
-from app.models import Card
+from app.models import Card, Hold
 
 login_url = (
     "https://books.kpl.org/iii/cas/login?service="
@@ -60,10 +60,17 @@ def test_check_card_slashes_in_holds_titles_split_right(
     assert hold.author == expected_author
 
 
-@pytest.mark.parametrize("hold_text,expected_status", [(" 9 of 83 holds ", (9, 83))])
-def test_check_card_reads_numeric_hold_position_as_tuple(
-    hold_text, expected_status, wpl_site
-):
+@pytest.mark.parametrize(
+    "hold_text,expected_status",
+    [
+        (" 9 of 83 holds ", (9, 83)),
+        ("Ready.", Hold.READY),
+        ("IN TRANSIT", Hold.IN_TRANSIT),
+        ("CHECK SHELVES", Hold.CHECK_SHELVES),
+        ("TRACE", Hold.DELAYED),
+    ],
+)
+def test_check_card_reads_hold_position(hold_text, expected_status, wpl_site):
     wpl_site.post(login_url, text="<a href='/holds'>holds</a>")
 
     wpl_site.get(

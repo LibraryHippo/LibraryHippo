@@ -23,6 +23,11 @@ class User(UserMixin, db.Model):
 
 
 class Hold:
+    READY = "Ready"
+    IN_TRANSIT = "In transit"
+    CHECK_SHELVES = "Check Shelves"
+    DELAYED = "Delayed"
+
     def __init__(self):
         self.patron_name = ""
         self.title = ""

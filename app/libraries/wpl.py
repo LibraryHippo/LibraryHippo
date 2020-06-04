@@ -8,6 +8,13 @@ from app.models import CardCheckResult, Checkout, Hold
 
 
 class WPL:
+    __special_hold_statuses = {
+        "Ready.": Hold.READY,
+        "IN TRANSIT": Hold.IN_TRANSIT,
+        "CHECK SHELVES": Hold.CHECK_SHELVES,
+        "TRACE": Hold.DELAYED,
+    }
+
     def login_url(self):
         return (
             "https://books.kpl.org/iii/cas/login?service="
@@ -88,12 +95,7 @@ class WPL:
                         if len(parts) > 1:
                             hold.author = parts[1].strip()
                     elif cell_name == "Status":
-                        text = "".join(hold_cell.strings)
-                        parts = text.split()
-                        if len(parts) > 2 and parts[1] == "of":
-                            hold.status = (int(parts[0]), int(parts[2]))
-                        else:
-                            hold.status = text
+                        hold.status = self.__parse_hold_status(hold_cell)
                     elif cell_name == "Pickup":
                         hold.pickup = hold_cell.find(
                             "option", selected="selected"
@@ -138,3 +140,13 @@ class WPL:
 
     def logout(self, session):
         session.get(self.logout_url())
+
+    def __parse_hold_status(self, status_cell):
+        text = "".join(status_cell.strings).strip()
+        if text in WPL.__special_hold_statuses:
+            return WPL.__special_hold_statuses[text]
+
+        parts = text.split()
+        if len(parts) > 2 and parts[1] == "of":
+            return (int(parts[0]), int(parts[2]))
+        return text
