@@ -84,8 +84,13 @@ class WPL:
                     if cell_name == "Title":
                         hold.title = "".join(hold_cell.strings)
                     elif cell_name == "Status":
-                        hold.status = "".join(hold_cell.strings)
-                    if cell_name == "Pickup":
+                        text = "".join(hold_cell.strings)
+                        parts = text.split()
+                        if len(parts) > 2 and parts[1] == "of":
+                            hold.status = (int(parts[0]), int(parts[2]))
+                        else:
+                            hold.status = text
+                    elif cell_name == "Pickup":
                         hold.pickup = hold_cell.find(
                             "option", selected="selected"
                         ).string

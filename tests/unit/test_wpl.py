@@ -19,10 +19,9 @@ def test_check_card_finds_holds(wpl_site):
         "/holds",
         text="""
              <table class="patFunc">
-             <tr class="patFuncHeaders"><th> TITLE </th><th>STATUS</th></tr>
+             <tr class="patFuncHeaders"><th> TITLE </th></tr>
              <tr class="patFuncEntry">
                  <td class="patFuncTitle">Blood heir / Amélie Wen Zhao</td>
-                 <td class="patFuncStatus"> 9 of 83 holds </td>
              </tr>
              </table>
              """,
@@ -37,7 +36,32 @@ def test_check_card_finds_holds(wpl_site):
     assert check_result.holds
     hold = check_result.holds[0]
     assert hold.title == "Blood heir / Amélie Wen Zhao"
-    assert hold.status == " 9 of 83 holds "
+
+
+def test_check_card_reads_numeric_hold_position_as_tuple(wpl_site):
+    wpl_site.post(login_url, text="<a href='/holds'>holds</a>")
+
+    wpl_site.get(
+        "/holds",
+        text="""
+             <table class="patFunc">
+             <tr class="patFuncHeaders"><th>STATUS</th></tr>
+             <tr class="patFuncEntry">
+                 <td class="patFuncStatus"> 9 of 83 holds </td>
+             </tr>
+             </table>
+             """,
+    )
+
+    card = make_card()
+
+    target = WPL()
+    check_result = target.check_card(card)
+
+    assert check_result
+    assert check_result.holds
+    hold = check_result.holds[0]
+    assert hold.status == (9, 83)
 
 
 def test_check_card_logs_out_after_check(wpl_site):
