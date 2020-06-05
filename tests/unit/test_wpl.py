@@ -23,6 +23,11 @@ logout_url = "https://books.kpl.org/logout"
         ),
         ("Full throttle : stories / Joe Hill", "Full throttle : stories", "Joe Hill",),
         ("Full throttle : stories", "Full throttle : stories", "",),
+        (
+            "The city/the city / China Mi\u00E9ville",
+            "The city/the city",
+            "China Mi\u00E9ville",
+        ),
     ],
 )
 def test_check_card_slashes_in_holds_titles_split_right(
