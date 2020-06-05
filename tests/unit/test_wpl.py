@@ -241,6 +241,48 @@ def test_check_card_adds_patron_name_to_holds(wpl_site):
     assert hold.patron_name == "Blair Conrad"
 
 
+@pytest.mark.parametrize(
+    "url_text,expected_url",
+    [
+        (
+            "https://encore.kpl.org/iii/encore_wpl/record/C__Rb2677337?suite=wpl",
+            "https://encore.kpl.org/iii/encore_wpl/record/C__Rb2677337?suite=wpl",
+        ),
+        ("/record=b2677337~S3", "https://books.kpl.org/record=b2677337~S3"),
+    ],
+)
+def test_check_card_reads_hold_url(url_text, expected_url, wpl_site):
+    wpl_site.post(login_url, text="<a href='/holds'>holds</a>")
+
+    wpl_site.get(
+        "/holds",
+        text=f"""
+<table class="patFunc">
+  <tr class="patFuncHeaders"><th>TITLE</th></tr>
+  <tr class="patFuncEntry">
+    <td class="patFuncTitle">
+      <label for="cancelb2677337x00">
+        <a href="{url_text}" target="_parent">
+          <span class="patFuncTitleMain">Blood heir / Amélie Wen Zhao</span>
+        </a>
+      </label>
+      <br>
+    </td>
+  </tr>
+</table>
+""",
+    )
+    card = make_card()
+
+    target = WPL()
+    check_result = target.check_card(card)
+
+    assert check_result
+    assert check_result.holds
+    hold = check_result.holds[0]
+    assert hold.url == expected_url
+
+
 def test_check_card_logs_out_after_check(wpl_site):
     card = make_card()
 

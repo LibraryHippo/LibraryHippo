@@ -132,6 +132,9 @@ class WPL:
                     hold.title = parts[0].strip()
                     if len(parts) > 1:
                         hold.author = parts[1].strip()
+                    hold.url = urllib.parse.urljoin(
+                        self.login_url(), hold_cell.a["href"]
+                    )
                 elif cell_name == "Status":
                     hold.status = self.__parse_hold_status(hold_cell)
                 elif cell_name == "Pickup":
