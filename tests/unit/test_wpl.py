@@ -217,6 +217,25 @@ def test_check_card_reads_hold_expires_date(wpl_site):
     assert hold.expires == datetime.date(2021, 7, 2)
 
 
+def test_check_card_adds_patron_name_to_holds(wpl_site):
+    wpl_site.post(login_url, text="<a href='/holds'>holds</a>")
+
+    wpl_site.get(
+        "/holds",
+        text="""<table class="patFunc">  <tr class="patFuncEntry"></tr></table>""",
+    )
+
+    card = make_card()
+
+    target = WPL()
+    check_result = target.check_card(card)
+
+    assert check_result
+    assert check_result.holds
+    hold = check_result.holds[0]
+    assert hold.patron_name == "Blair Conrad"
+
+
 def test_check_card_logs_out_after_check(wpl_site):
     card = make_card()
 

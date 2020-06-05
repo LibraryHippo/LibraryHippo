@@ -37,6 +37,8 @@ class WPL:
         if holds_anchor:
             holds_url = urllib.parse.urljoin(self.login_url(), holds_anchor["href"])
             holds = self.get_holds(session, holds_url)
+            for hold in holds:
+                hold.patron_name = card.patron_name
         else:
             holds = []
 
