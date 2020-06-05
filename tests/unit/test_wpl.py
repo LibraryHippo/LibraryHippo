@@ -150,6 +150,45 @@ def test_check_card_reads_pickup_location(
     assert hold.pickup_location == expected_pickup_location
 
 
+@pytest.mark.parametrize(
+    "frozen_text,expected_is_frozen",
+    [
+        ('<input type="checkbox" name="freezeb2186875" checked />', True),
+        ("&nbps;", False),
+    ],
+)
+def test_check_card_reads_frozen_status(frozen_text, expected_is_frozen, wpl_site):
+    wpl_site.post(login_url, text="<a href='/holds'>holds</a>")
+
+    wpl_site.get(
+        "/holds",
+        text=f"""
+<table class="patFunc">
+  <tr class="patFuncHeaders">
+    <th> FREEZE </th>
+  </tr>
+  <tr class="patFuncEntry">
+    <td  class="patFuncFreeze" align="center">
+      {frozen_text}
+    </td>
+  </tr>
+</table>""",
+    )
+
+    card = make_card()
+
+    target = WPL()
+    check_result = target.check_card(card)
+
+    assert check_result
+    assert check_result.holds
+    hold = check_result.holds[0]
+    if expected_is_frozen:
+        assert "frozen" in hold.status_notes
+    else:
+        assert "frozen" not in hold.status_notes
+
+
 def test_check_card_logs_out_after_check(wpl_site):
     card = make_card()
 

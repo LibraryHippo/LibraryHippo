@@ -134,7 +134,7 @@ class WPL:
                 elif cell_name == "Pickup":
                     hold.pickup_location = self.__parse_hold_pickup_location(hold_cell)
                 elif cell_name == "Freeze" and "checked" in hold_cell.input.attrs:
-                    hold.status_notes.append("Frozen")
+                    hold.status_notes.append("frozen")
                 elif cell_name == "Cancel":
                     hold.expires = "".join(hold_cell.strings)
             except:  # noqa there is nothing we can do
