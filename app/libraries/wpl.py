@@ -80,33 +80,7 @@ class WPL:
         for hold_row in holds_table.children:
             if hold_row.name != "tr" or "patFuncEntry" not in hold_row["class"]:
                 continue
-
-            hold = Hold()
-            for hold_cell in hold_row.children:
-                if hold_cell.name != "td":
-                    continue
-                cell_class = hold_cell["class"][0]
-                cell_name = cell_class.replace("patFunc", "")
-                try:
-                    if cell_name == "Title":
-                        text = "".join(hold_cell.strings)
-                        parts = text.split(" / ", 1)
-                        hold.title = parts[0].strip()
-                        if len(parts) > 1:
-                            hold.author = parts[1].strip()
-                    elif cell_name == "Status":
-                        hold.status = self.__parse_hold_status(hold_cell)
-                    elif cell_name == "Pickup":
-                        hold.pickup_location = self.__parse_hold_pickup_location(
-                            hold_cell
-                        )
-                    elif cell_name == "Freeze" and "checked" in hold_cell.input.attrs:
-                        hold.status_notes.append("Frozen")
-                    elif cell_name == "Cancel":
-                        hold.expires = "".join(hold_cell.strings)
-                except:  # noqa there is nothing we can do
-                    pass
-            holds.append(hold)
+            holds.append(self.__parse_one_hold(hold_row))
         return holds
 
     def get_checkouts(self, session, checkouts_url):
@@ -140,6 +114,32 @@ class WPL:
 
     def logout(self, session):
         session.get(self.logout_url())
+
+    def __parse_one_hold(self, hold_row):
+        hold = Hold()
+        for hold_cell in hold_row.children:
+            if hold_cell.name != "td":
+                continue
+            cell_class = hold_cell["class"][0]
+            cell_name = cell_class.replace("patFunc", "")
+            try:
+                if cell_name == "Title":
+                    text = "".join(hold_cell.strings)
+                    parts = text.split(" / ", 1)
+                    hold.title = parts[0].strip()
+                    if len(parts) > 1:
+                        hold.author = parts[1].strip()
+                elif cell_name == "Status":
+                    hold.status = self.__parse_hold_status(hold_cell)
+                elif cell_name == "Pickup":
+                    hold.pickup_location = self.__parse_hold_pickup_location(hold_cell)
+                elif cell_name == "Freeze" and "checked" in hold_cell.input.attrs:
+                    hold.status_notes.append("Frozen")
+                elif cell_name == "Cancel":
+                    hold.expires = "".join(hold_cell.strings)
+            except:  # noqa there is nothing we can do
+                pass
+        return hold
 
     def __parse_hold_status(self, status_cell):
         text = "".join(status_cell.strings).strip()
