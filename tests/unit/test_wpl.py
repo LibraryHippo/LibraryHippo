@@ -1,3 +1,4 @@
+import datetime
 import pytest
 
 from app.libraries.wpl import WPL
@@ -187,6 +188,33 @@ def test_check_card_reads_frozen_status(frozen_text, expected_is_frozen, wpl_sit
         assert "frozen" in hold.status_notes
     else:
         assert "frozen" not in hold.status_notes
+
+
+def test_check_card_reads_hold_expires_date(wpl_site):
+    wpl_site.post(login_url, text="<a href='/holds'>holds</a>")
+
+    wpl_site.get(
+        "/holds",
+        text="""
+<table class="patFunc">
+  <tr class="patFuncHeaders">
+    <th> CANCEL IF NOT FILLED BY </th>
+  </tr>
+  <tr class="patFuncEntry">
+    <td class="patFuncCancel">07-02-21</td>
+  </tr>
+</table>""",
+    )
+
+    card = make_card()
+
+    target = WPL()
+    check_result = target.check_card(card)
+
+    assert check_result
+    assert check_result.holds
+    hold = check_result.holds[0]
+    assert hold.expires == datetime.date(2021, 7, 2)
 
 
 def test_check_card_logs_out_after_check(wpl_site):

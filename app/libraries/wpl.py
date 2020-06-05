@@ -1,3 +1,4 @@
+import datetime
 import re
 import urllib.parse
 
@@ -136,7 +137,9 @@ class WPL:
                 elif cell_name == "Freeze" and "checked" in hold_cell.input.attrs:
                     hold.status_notes.append("frozen")
                 elif cell_name == "Cancel":
-                    hold.expires = "".join(hold_cell.strings)
+                    hold.expires = datetime.datetime.strptime(
+                        hold_cell.string.strip(), "%m-%d-%y"
+                    ).date()
             except:  # noqa there is nothing we can do
                 pass
         return hold
