@@ -1,3 +1,5 @@
+import datetime
+
 from app import db, login_manager
 from flask_login import UserMixin
 
@@ -18,6 +20,40 @@ class User(UserMixin, db.Model):
     social_id = db.Column(db.String(64), nullable=False, unique=True)
     nickname = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(64), nullable=False)
+
+
+class Hold:
+    READY = "Ready"
+    IN_TRANSIT = "In transit"
+    CHECK_SHELVES = "Check Shelves"
+    DELAYED = "Delayed"
+
+    def __init__(self):
+        self.patron_name = ""
+        self.title = ""
+        self.author = ""
+        self.url = ""
+        self.status = ""
+        self.status_notes = []
+        self.expires = datetime.date.max
+        self.pickup_location = ""
+
+
+class Checkout:
+    def __init__(self):
+        self.patron_name = ""
+        self.library_name = ""
+        self.title = ""
+        self.author = ""
+        self.url = ""
+        self.due_date = ""
+        self.status_notes = []
+
+
+class CardCheckResult:
+    def __init__(self, holds, checkouts):
+        self.holds = holds
+        self.checkouts = checkouts
 
 
 @login_manager.user_loader

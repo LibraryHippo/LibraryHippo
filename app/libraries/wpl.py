@@ -1,11 +1,21 @@
+import datetime
 import re
 import urllib.parse
 
 from bs4 import BeautifulSoup
 from requests import Session
 
+from app.models import CardCheckResult, Checkout, Hold
+
 
 class WPL:
+    __special_hold_statuses = {
+        "Ready.": Hold.READY,
+        "IN TRANSIT": Hold.IN_TRANSIT,
+        "CHECK SHELVES": Hold.CHECK_SHELVES,
+        "TRACE": Hold.DELAYED,
+    }
+
     def login_url(self):
         return (
             "https://books.kpl.org/iii/cas/login?service="
@@ -27,6 +37,8 @@ class WPL:
         if holds_anchor:
             holds_url = urllib.parse.urljoin(self.login_url(), holds_anchor["href"])
             holds = self.get_holds(session, holds_url)
+            for hold in holds:
+                hold.patron_name = card.patron_name
         else:
             holds = []
 
@@ -39,7 +51,8 @@ class WPL:
         else:
             checkouts = []
 
-        return {"holds": holds, "checkouts": checkouts}
+        self.logout(session)
+        return CardCheckResult(holds, checkouts)
 
     def login(self, session, patron, number, pin):
         initial_login_page_view = session.get(self.login_url())
@@ -70,27 +83,7 @@ class WPL:
         for hold_row in holds_table.children:
             if hold_row.name != "tr" or "patFuncEntry" not in hold_row["class"]:
                 continue
-
-            hold = {}
-            for hold_cell in hold_row.children:
-                if hold_cell.name != "td":
-                    continue
-                cell_class = hold_cell["class"][0]
-                cell_name = cell_class.replace("patFunc", "")
-                try:
-                    if cell_name == "Mark":
-                        continue
-                    if cell_name == "Pickup":
-                        hold[cell_name] = hold_cell.find(
-                            "option", selected="selected"
-                        ).string
-                    elif cell_name == "Freeze":
-                        hold[cell_name] = "checked" in hold_cell.input.attrs
-                    else:
-                        hold[cell_name] = "".join(hold_cell.strings)
-                except:  # noqa there is nothing we can do
-                    hold[cell_name] = "".join(hold_cell.strings)
-            holds.append(hold)
+            holds.append(self.__parse_one_hold(hold_row))
         return holds
 
     def get_checkouts(self, session, checkouts_url):
@@ -105,15 +98,73 @@ class WPL:
 
             if "patFuncEntry" not in checkout_row["class"]:
                 continue
-            checkout = {}
+            checkout = Checkout()
             for checkout_cell in checkout_row.children:
                 if checkout_cell.name != "td":
                     continue
                 cell_class = checkout_cell["class"][0]
                 cell_name = cell_class.replace("patFunc", "")
-                if cell_name == "Mark":
-                    continue
-                else:
-                    checkout[cell_name] = "".join(checkout_cell.strings)
+                try:
+                    if cell_name == "Title":
+                        checkout.title = "".join(checkout_cell.strings)
+                    elif cell_name == "Status":
+                        checkout.due_date = "".join(checkout_cell.strings)
+                except:  # noqa there is nothing we can do
+                    pass
+
             checkouts.append(checkout)
         return checkouts
+
+    def logout(self, session):
+        session.get(self.logout_url())
+
+    def __parse_one_hold(self, hold_row):
+        hold = Hold()
+        for hold_cell in hold_row.children:
+            if hold_cell.name != "td":
+                continue
+            cell_class = hold_cell["class"][0]
+            cell_name = cell_class.replace("patFunc", "")
+            try:
+                if cell_name == "Title":
+                    text = "".join(hold_cell.strings)
+                    parts = text.split(" / ", 1)
+                    hold.title = parts[0].strip()
+                    if len(parts) > 1:
+                        hold.author = parts[1].strip()
+                    hold.url = urllib.parse.urljoin(
+                        self.login_url(), hold_cell.a["href"]
+                    )
+                elif cell_name == "Status":
+                    hold.status = self.__parse_hold_status(hold_cell)
+                elif cell_name == "Pickup":
+                    hold.pickup_location = self.__parse_hold_pickup_location(hold_cell)
+                elif cell_name == "Freeze" and "checked" in hold_cell.input.attrs:
+                    hold.status_notes.append("frozen")
+                elif cell_name == "Cancel":
+                    hold.expires = datetime.datetime.strptime(
+                        hold_cell.string.strip(), "%m-%d-%y"
+                    ).date()
+            except:  # noqa there is nothing we can do
+                pass
+        return hold
+
+    def __parse_hold_status(self, status_cell):
+        text = "".join(status_cell.strings).strip()
+        if text in WPL.__special_hold_statuses:
+            return WPL.__special_hold_statuses[text]
+
+        parts = text.split()
+        if len(parts) > 2 and parts[1] == "of":
+            return (int(parts[0]), int(parts[2]))
+        return text
+
+    def __parse_hold_pickup_location(self, pickup_cell):
+        location = ""
+        if pickup_cell.find("select"):
+            selected = pickup_cell.find("option", selected="selected")
+            if selected:
+                location = selected.string
+        else:
+            location = pickup_cell.string
+        return location.strip()

@@ -1,3 +1,4 @@
+import datetime
 import json
 
 from authomatic.adapters import WerkzeugAdapter
@@ -29,20 +30,20 @@ def index():
 def check():
     card = Card.query.get(1)  # a hack - we know there's only 1 card for now
     card_check_result = WPL().check_card(card)
-    card.last_state = json.dumps(card_check_result)
+    card.last_state = to_json(card_check_result)
     db.session.commit()
 
     result = "<h1>Holds</h1>"
-    for hold in card_check_result["holds"]:
+    for hold in card_check_result.holds:
         result += "<dl>"
-        for k, v in hold.items():
+        for k, v in hold.__dict__.items():
             result += f"<dt>{k}</dt><dd>{v}</dd>"
         result += "</dl><hr>"
 
     result += "<h1>Checkouts</h1>"
-    for checkout in card_check_result["checkouts"]:
+    for checkout in card_check_result.checkouts:
         result += "<dl>"
-        for k, v in checkout.items():
+        for k, v in checkout.__dict__.items():
             result += f"<dt>{k}</dt><dd>{v}</dd>"
         result += "</dl><hr>"
 
@@ -91,3 +92,16 @@ def logout():
     if not current_user.is_anonymous:
         logout_user()
     return redirect(url_for("index"))
+
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, object):
+        if isinstance(object, datetime.date):
+            return object.strftime("%Y-%m-%d")
+        elif hasattr(object, "__dict__"):
+            return object.__dict__
+        return json.JSONEncoder.default(self, object)
+
+
+def to_json(object):
+    return JSONEncoder().encode(object)
