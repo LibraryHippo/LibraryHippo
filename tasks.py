@@ -18,4 +18,4 @@ def deploy(c):
 @task
 def test(c):
     """Run tests like we would on the CI server"""
-    c.run("pytest --black --flake8 --color=yes")
+    c.run("pytest --color=yes")
