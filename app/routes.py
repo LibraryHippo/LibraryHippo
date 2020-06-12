@@ -33,21 +33,7 @@ def index():
     card.last_state = to_json(card_check_result)
     db.session.commit()
 
-    result = "<h1>Holds</h1>"
-    for hold in card_check_result.holds:
-        result += "<dl>"
-        for k, v in hold.__dict__.items():
-            result += f"<dt>{k}</dt><dd>{v}</dd>"
-        result += "</dl><hr>"
-
-    result += "<h1>Checkouts</h1>"
-    for checkout in card_check_result.checkouts:
-        result += "<dl>"
-        for k, v in checkout.__dict__.items():
-            result += f"<dt>{k}</dt><dd>{v}</dd>"
-        result += "</dl><hr>"
-
-    return result
+    return render_template("index.jinja", status=card_check_result)
 
 
 @app.route("/login/<provider>/", methods=["GET", "POST"])
