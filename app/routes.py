@@ -20,34 +20,20 @@ from app.libraries.wpl import WPL
 from app.models import Card, db, User
 
 
+@app.route("/welcome")
+def welcome():
+    return render_template("welcome.jinja")
+
+
 @app.route("/")
 @app.route("/index")
 def index():
-    return render_template("index.jinja")
-
-
-@app.route("/check")
-def check():
     card = Card.query.get(1)  # a hack - we know there's only 1 card for now
     card_check_result = WPL().check_card(card)
     card.last_state = to_json(card_check_result)
     db.session.commit()
 
-    result = "<h1>Holds</h1>"
-    for hold in card_check_result.holds:
-        result += "<dl>"
-        for k, v in hold.__dict__.items():
-            result += f"<dt>{k}</dt><dd>{v}</dd>"
-        result += "</dl><hr>"
-
-    result += "<h1>Checkouts</h1>"
-    for checkout in card_check_result.checkouts:
-        result += "<dl>"
-        for k, v in checkout.__dict__.items():
-            result += f"<dt>{k}</dt><dd>{v}</dd>"
-        result += "</dl><hr>"
-
-    return result
+    return render_template("index.jinja", status=card_check_result)
 
 
 @app.route("/login/<provider>/", methods=["GET", "POST"])
@@ -71,7 +57,7 @@ def login(provider):
         if result.user.id is None:
             flash("Authentication failed.")
             app.logger.error("Authentication failed: %s", result.error)
-            return redirect(url_for("index"))
+            return redirect(url_for("welcome"))
 
         social_id = provider + ":" + result.user.id
         user = User.query.filter_by(social_id=social_id).first()
@@ -91,7 +77,7 @@ def login(provider):
 def logout():
     if not current_user.is_anonymous:
         logout_user()
-    return redirect(url_for("index"))
+    return redirect(url_for("welcome"))
 
 
 class JSONEncoder(json.JSONEncoder):

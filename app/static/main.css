@@ -1,0 +1,110 @@
+/* http://css.maxdesign.com.au/floatutorial/tutorial0816.htm */
+
+:root { 
+  
+  --main-background-color: hsl(0, 0%, 100%);
+  --main-accent-color: hsl(358.9, 62.2%, 17.6%);
+  --link-color: var(--main-accent-color);
+  --table-separator-color:hsl(0,0%,80%);
+}
+
+body
+{
+  padding: 0;
+  margin: 0;
+  font-family: sans-serif;
+}
+
+header
+{
+  vertical-align: top;
+  background: linear-gradient(180deg, var(--main-accent-color) 70px, var(--main-background-color) 70px);
+}
+
+#logo
+{
+  display: inline-block;
+}
+
+#masthead {
+  vertical-align: top;
+  display: inline-block;
+}
+
+header h1
+{
+  font-size: 30px;
+  height: 40px;
+  padding-top: 20px;
+  padding-bottom: 10px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  color: var(--main-background-color);
+  background-color: var(--main-accent-color);
+}
+
+main
+{
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
+h2 {
+  color: var(--main-accent-color);
+}
+
+a {
+    text-decoration: none;
+    color: var(--link-color);
+}
+
+main a:hover {
+  text-decoration: underline;
+}
+
+nav
+{
+  padding-top: 0.5em;
+}
+
+nav ul {
+    margin: 0px;
+}
+
+nav ul li {
+    display: inline;
+}
+
+nav a {
+  font-weight: bold;
+  padding-left: 1em;
+  padding-right: 1em;
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+}
+
+nav a:hover {
+  background-color: var(--main-accent-color);
+  color: var(--main-background-color);
+}
+
+table {
+  padding: 0px;
+  margin: 0px;
+  border-collapse: collapse;
+}
+
+thead {
+  text-align: left;
+  border-bottom: 1px solid;
+  border-color: var(--table-separator-color);
+}
+
+td, th {
+  padding: 1px 1em;
+}
+
+thead tr, tbody tr {
+  border-top: 1px solid;
+  border-color: var(--table-separator-color);
+}

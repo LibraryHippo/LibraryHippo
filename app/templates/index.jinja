@@ -1,5 +1,36 @@
 {% extends "base.jinja" %}
 
 {% block body %}
-<h1>LibraryHippo 2020</h1>
+{% if status.holds %}
+<section id="holds">
+  <h2>Holds</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Author</th>
+        <th>Patron</th>
+        <th>Pickup</th>
+        <th>Status</th>
+        <th>&nbsp;</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for hold in status.holds %}
+      <tr>
+        {% if hold.title and hold.url %}
+        <td><a href="{{ hold.url }}">{{ hold.title}}</a></td>
+        {% else %}
+        <td>{{ hold.title or '&nbsp;' }}</td>
+        {% endif %}
+        <td>{{ hold.author or '&nbsp;' }}</td>
+        <td>{{ hold.patron_name or '&nbsp;' }}</td>
+        <td>{{ hold.pickup_location or '&nbsp;' }}</td>
+        <td>{{ hold.status or '&nbsp;' }}</td>
+        <td>{{ ' '.join(hold.status_notes) or '&nbsp;' }}</td>
+    </tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
 {% endblock %}
