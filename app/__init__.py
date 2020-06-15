@@ -57,4 +57,10 @@ authomatic = Authomatic(config=Config.OAUTH, secret=Config.SECRET_KEY)
 
 app.logger.info("LibraryHippo startup")
 
-from app import routes, models  # noqa - imports at bottom to avoid circular references
+from . import auth  # noqa - imports at bottom to avoid circular references
+from . import main  # noqa - imports at bottom to avoid circular references
+
+app.register_blueprint(auth.bp)
+app.register_blueprint(main.bp)
+
+from app import models  # noqa - imports at bottom to avoid circular references
