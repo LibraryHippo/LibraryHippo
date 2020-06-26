@@ -8,13 +8,12 @@ from app.models import Card, db
 from app.main import bp
 
 
-@bp.route("/welcome")
+@bp.route("/welcome/")
 def welcome():
     return render_template("welcome.jinja")
 
 
 @bp.route("/")
-@bp.route("/index")
 def index():
     card = Card.query.get(1)  # a hack - we know there's only 1 card for now
     card_check_result = WPL().check_card(card)

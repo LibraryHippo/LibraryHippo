@@ -51,7 +51,7 @@ def login(provider):
     return redirect(url_for("main.index"))
 
 
-@bp.route("/logout")
+@bp.route("/logout/")
 def logout():
     if not current_user.is_anonymous:
         logout_user()
