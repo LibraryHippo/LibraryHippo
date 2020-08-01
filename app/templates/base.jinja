@@ -7,16 +7,16 @@
   <body>
     <header>
       <div id="logo">
-        <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='logo.png') }}"></a>
+        <a href="{{ url_for('main.index') }}"><img src="{{ url_for('static', filename='logo.png') }}"></a>
       </div>
       <div id="masthead">
         <h1>LibraryHippo 2020</h1>
         <nav>
           <ul>
             {% if current_user.is_anonymous %}
-            <li><a href="{{ url_for('login', provider='google') }}">login</a></li>
+            <li><a href="{{ url_for('auth.login', provider='google') }}">login</a></li>
             {% else %}
-            <li><a href="{{ url_for('logout') }}">logout</a></li>
+            <li><a href="{{ url_for('auth.logout') }}">logout</a></li>
             {% endif %}
           </ul>
         </nav>
