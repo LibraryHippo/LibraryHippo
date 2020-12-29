@@ -10,6 +10,9 @@ from data import Hold, Item, LoginError, CardStatus
 import utils.soup
 
 
+td_or_th_regex = re.compile("^(td|th)$")
+
+
 def strip_tags(element):
     return "".join(
         [e for e in element.recursiveChildGenerator() if isinstance(e, unicode)]
@@ -191,7 +194,7 @@ class LibraryAccount:
         for row in table_header.findNextSiblings("tr"):
             entry = Hold(self.library, self.card)
             i = 0
-            for cell in row("td"):
+            for cell in row.findAll(td_or_th_regex):
                 column_name = headers[i]
 
                 if column_name == "TITLE":
@@ -252,7 +255,7 @@ class LibraryAccount:
         for row in table_header.findNextSiblings("tr"):
             entry = Item(self.library, self.card)
             i = 0
-            for cell in row("td"):
+            for cell in row.findAll(td_or_th_regex):
                 column_name = headers[i]
                 if column_name == "TITLE":
                     self.parse_title(cell, entry)
