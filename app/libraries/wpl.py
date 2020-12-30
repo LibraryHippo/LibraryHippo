@@ -121,12 +121,12 @@ class WPL:
     def __parse_one_hold(self, hold_row):
         hold = Hold()
         for hold_cell in hold_row.children:
-            if hold_cell.name != "td":
+            if hold_cell.name not in ["td", "th"]:
                 continue
             cell_class = hold_cell["class"][0]
             cell_name = cell_class.replace("patFunc", "")
             try:
-                if cell_name == "Title":
+                if cell_name == "BibTitle":
                     text = "".join(hold_cell.strings)
                     parts = text.split(" / ", 1)
                     hold.title = parts[0].strip()

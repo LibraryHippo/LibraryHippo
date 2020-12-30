@@ -38,17 +38,16 @@ def test_check_card_slashes_in_holds_titles_split_right(
     wpl_site.get(
         "/holds",
         text=f"""
-<table class="patFunc">
-  <tr class="patFuncHeaders"><th>TITLE</th></tr>
+<table lang="en" class="patFunc">
+  <tr class="patFuncHeaders"><th scope="col" class="patFuncHeaders"> TITLE </th></tr>
   <tr class="patFuncEntry">
-    <td class="patFuncTitle">
-      <label for="cancelb2692795x05">
-        <a href="https://URL"target="_parent">
+    <th class="patFuncBibTitle" scope="row">
+        <a id="id_pfbibtitle_titleb2677337x00"
+            href="https://encore.kpl.org/iii/encore_wpl/record/C__Rb2677337?lang=eng&suite=wpl">
           <span class="patFuncTitleMain">{title_text}</span>
         </a>
-      </label>
-    <br>
-    </td>
+        <br />
+    </th>
   </tr>
 </table>
 """,
@@ -257,17 +256,15 @@ def test_check_card_reads_hold_url(url_text, expected_url, wpl_site):
     wpl_site.get(
         "/holds",
         text=f"""
-<table class="patFunc">
-  <tr class="patFuncHeaders"><th>TITLE</th></tr>
+<table lang="en" class="patFunc">
+  <tr class="patFuncHeaders"><th scope="col" class="patFuncHeaders"> TITLE </th></tr>
   <tr class="patFuncEntry">
-    <td class="patFuncTitle">
-      <label for="cancelb2677337x00">
-        <a href="{url_text}" target="_parent">
+    <th class="patFuncBibTitle" scope="row">
+        <a id="id_pfbibtitle_titleb2677337x00" href="{url_text}">
           <span class="patFuncTitleMain">Blood heir / Amélie Wen Zhao</span>
         </a>
-      </label>
-      <br>
-    </td>
+        <br />
+    </th>
   </tr>
 </table>
 """,
