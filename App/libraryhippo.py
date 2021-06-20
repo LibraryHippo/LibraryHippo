@@ -235,7 +235,7 @@ class RemoveResponsible(MyHandler):
                 send_email([principal_email],
                            'LibraryHippo: you are no longer a responsible person for the ' + family.name + ' family',
                            body=user.email() + ' has removed you from being a responsible person for the ' +
-                           family.name + 'family at LibraryHippo (http://libraryhippo.com)')
+                           family.name + 'family at LibraryHippo (https://www.libraryhippo.com)')
                 logging.info('removing principal %s ', principal)
                 family.principals.remove(principal)
                 removed_a_principal = True
@@ -292,7 +292,7 @@ class AddResponsible(MyHandler):
                 send_email([new_principal.email()],
                            'LibraryHippo: you are now a responsible person for the ' + family.name + ' family',
                            body=user.email() + ' has made you a responsible person for the ' + family.name +
-                           ' family.\nLearn more by visiting LibraryHippo at http://libraryhippo.com')
+                           ' family.\nLearn more by visiting LibraryHippo at https://www.libraryhippo.com')
                 family.principals.append(new_principal)
                 family.put()
         else:
@@ -456,7 +456,7 @@ class AdminNotify(MyHandler):
                 time_since_check = utils.filters.elapsed(elapsed)
                 logging.error('unable to check card for ' + time_since_check)
                 template['should_notify'] = True
-                why_link = '<a href="http://libraryhippo.com/about#check_failed">Why?</a>'
+                why_link = '<a href="https://www.libraryhippo.com/about#check_failed">Why?</a>'
                 template['info'].append(data.CardInfo(c.payload.library_name, c.payload.patron_name,
                                                       'Unable to check card for ' + time_since_check + '. ' +
                                                       why_link))
