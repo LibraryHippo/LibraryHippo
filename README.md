@@ -1,4 +1,4 @@
-[LibraryHippo](http://www.libraryhippo.com/) is a
+[LibraryHippo](https://www.libraryhippo.com/) is a
 [Google App Engine](https://cloud.google.com/products/app-engine/)
 application for managing families' collective library accounts.
 
